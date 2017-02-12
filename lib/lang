@@ -1,0 +1,38 @@
+#!/bin/bash -e
+
+function include() {
+  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  source "${self_dir}/system"
+}
+include
+
+function boolean() {
+  case "$1" in
+    true) echo true ;;
+    false) echo false ;;
+    TRUE) echo true ;;
+    FALSE) echo false ;;
+    True) echo true ;;
+    False) echo false ;;
+
+    yes) echo true ;;
+    no) echo false ;;
+    YES) echo true ;;
+    NO) echo false ;;
+    Yes) echo true ;;
+    No) echo false ;;
+
+    on) echo true ;;
+    off) echo false ;;
+    ON) echo true ;;
+    OFF) echo false ;;
+    On) echo true ;;
+    Off) echo false ;;
+
+    1) echo true ;;
+    0) echo false ;;
+
+    *) abort "ERROR - Unknown boolean value $1" ;;
+  esac
+}
+

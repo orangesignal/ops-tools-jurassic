@@ -1,0 +1,35 @@
+#!/bin/bash -e
+
+function make_dir() {
+  declare -r p="${1:?}"
+  if [ ! -d "${p}" ]; then
+    mkdir -p "${p}"
+  fi
+}
+
+function remove_dir() {
+  local p="${1:?}"
+  if [[ -d "${p}" ]]; then
+    rm -rf "${p}"
+  fi
+}
+
+function remake_dir() {
+  local p="${1:?}"
+  remove_dir "${p}"
+  mkdir -p "${p}"
+}
+
+function basename() {
+  echo "${1##*/}"
+}
+
+function filename() {
+  local basename=$(basename $1)
+  echo "${basename%.*}"
+}
+
+function parent() {
+  echo "$(filename $(echo "${1%/*}"))"
+}
+

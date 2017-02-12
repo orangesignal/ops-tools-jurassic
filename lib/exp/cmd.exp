@@ -1,0 +1,73 @@
+#!/usr/bin/expect -f
+
+set env(TERM) vt100
+set env(LANG) C
+
+set prompt {[#>$]}
+set pw_prompt {[:]}
+
+set ssh_config    [lindex $argv 0]
+set hostname      [lindex $argv 1]
+set username      [lindex $argv 2]
+set password      [lindex $argv 3]
+set root_cmd      [lindex $argv 4]
+set root_password [lindex $argv 5]
+set cmd           [lindex $argv 6]
+
+# ssh login + switch to root
+log_user 0
+set timeout 10
+spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
+expect {
+  eof     { puts "Connection rejected by the host"; exit 2 }
+  timeout { puts "Unable to access the host"; exit 2 }
+  password: { send -- "$password\r" }
+  default { exit 2 }
+}
+expect {
+  timeout { puts "Unable to access the host"; exit 2 }
+  : { send -- "$root_password\r" }
+  default { exit 2 }
+}
+expect {
+  timeout { puts "Unable to access the host"; exit 2 }
+  -re $prompt
+}
+
+# execute command
+set timeout -1
+send -- "$cmd\r"
+expect {
+  timeout { puts "Unable to access the host"; exit 2 }
+  -re $prompt
+}
+
+# command status
+send -- "echo \$?\r"
+expect {
+  timeout { puts "Unable to access the host"; exit 2 }
+  -re "\n(\[^\r]*)\r"
+}
+set action_status "$expect_out(1,string)"
+
+expect {
+  timeout { puts "Unable to access the host"; exit 2 }
+  -re $prompt
+}
+
+# root exit
+send -- "exit\r"
+
+# terminate
+expect eof
+catch wait result
+set os_error [lindex $result 2]
+if { $os_error == -1 } {
+  puts "Fail to exec"
+  exit 127
+}
+set status [lindex $result 3]
+if { $status == 0 } {
+  exit $action_status
+}
+exit $status

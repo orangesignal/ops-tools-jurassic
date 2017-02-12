@@ -1,0 +1,4 @@
+# hostname username password root_cmd root_password
+w01	devops	123456	sudo su -	
+w02	devops2	234567	su -	
+

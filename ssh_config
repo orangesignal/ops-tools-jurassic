@@ -1,0 +1,28 @@
+###############################################################################
+# example ssh_config
+###############################################################################
+# Default settings
+
+Host *
+  AddressFamily inet
+  Protocol 2
+  Port 22
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+#  SendEnv LANG LC_*
+
+###############################################################################
+# Gateway server
+
+Host gateway01
+  HostName 192.168.56.101
+
+###############################################################################
+# DevOps servers
+
+# usage: sshpass -p 123456 ssh -F ./ssh_config -q devops@web01
+Host web01 www01 w01
+  HostName 192.168.56.102
+  # Using gateway server + password auth (require sshpass)
+#  ProxyCommand sshpass -p 'password' ssh -F ./ssh_config -q username@gateway01
+
