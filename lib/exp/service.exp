@@ -55,6 +55,7 @@ expect {
 }
 
 # get process count
+sleep 1
 send -- "ps ax | grep $service_name | grep -v grep | grep -c ''\r"
 expect {
   -re "\n(\[^\r]*)\r"
