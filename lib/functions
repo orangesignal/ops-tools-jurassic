@@ -47,7 +47,7 @@ function passlist() {
 }
 
 function ssh_args() {
-  echo "-F ${ssh_config} -q -t -t"
+  echo "-F ${ssh_config} -q"
 }
 
 # リモート環境へ ssh ログインして引数で指定されたディレクトリが存在しなければ作成します。
@@ -84,14 +84,16 @@ function ops_cmd() {
   declare -r cmd="${2}"
 
   declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-  expect -f ${self_dir}/exp/cmd.exp -- \
+  declare -r result=$(expect -f ${self_dir}/exp/cmd.exp -- \
     "${ssh_config}" \
     "${hostname}" \
     "${username}" \
     "${password}" \
     "${root_cmd}" \
     "${root_password}" \
-    "${cmd}"
+    "${cmd}" \
+  )
+  echo "${result}"
 }
 
 function ops_service() {
