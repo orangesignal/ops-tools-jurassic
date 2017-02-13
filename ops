@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+function include() {
+  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  source "${self_dir}/lib/functions"
+}
+include
+
+case "${1?}" in
+	fetch )
+		;;
+	copy )
+		;;
+	service )
+		ops_service "${2}" "${3}" "${4}"
+		;;
+	* )
+		;;
+esac

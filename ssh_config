@@ -24,5 +24,5 @@ Host gateway01
 Host web01 www01 w01
   HostName 192.168.56.102
   # Using gateway server + password auth (require sshpass)
-#  ProxyCommand sshpass -p 'password' ssh -F ./ssh_config -q username@gateway01
+#  ProxyCommand sshpass -p 'password' ssh -F ./ssh_config -W %h:%p -q -t -t username@gateway01
 

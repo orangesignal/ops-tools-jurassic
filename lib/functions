@@ -40,14 +40,14 @@ function passlist() {
   set -- ${line}
   username=${2}
   password=${3}
-  root_cmd=${4:-'sudosu -'}
+  root_cmd=${4:-'sudo su -'}
   root_password=${5:-${password}}
 
   IFS=${ifs_save}
 }
 
 function ssh_args() {
-  echo "-F ${ssh_config} -q -t"
+  echo "-F ${ssh_config} -q -t -t"
 }
 
 # リモート環境へ ssh ログインして引数で指定されたディレクトリが存在しなければ作成します。
@@ -81,7 +81,7 @@ function generate_work_dir_name() {
 
 function ops_cmd() {
   passlist "${1:?}"
-  declare -r cmd="${2:?}"
+  declare -r cmd="${2}"
 
   declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
   expect -f ${self_dir}/exp/cmd.exp -- \

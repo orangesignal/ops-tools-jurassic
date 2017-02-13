@@ -18,53 +18,53 @@ set cmd           [lindex $argv 7]
 # ssh login + switch to root
 log_user 0
 set timeout 10
-spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
+spawn ssh -F ${ssh_config} -q -t -t $username@$hostname $root_cmd
 expect {
-  eof     { puts "Connection rejected by the host"; exit 2 }
-  timeout { puts "Unable to access the host"; exit 2 }
+  eof     { send_error "Connection rejected by the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   password: { send -- "$password\r" }
   default { exit 2 }
 }
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   : { send -- "$root_password\r" }
   default { exit 2 }
 }
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   -re $prompt
 }
 
 # execute service command
 send -- "service $service_name $cmd\r"
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   -re $prompt
 }
 
 # command status
 send -- "echo \$?\r"
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   -re "\n(\[^\r]*)\r"
 }
 set action_status "$expect_out(1,string)"
 
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   -re $prompt
 }
 
 # get process count
 send -- "ps ax | grep $service_name | grep -v grep | grep -c ''\r"
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   -re "\n(\[^\r]*)\r"
 }
 send_user "$expect_out(1,string)"
 
 expect {
-  timeout { puts "Unable to access the host"; exit 2 }
+  timeout { send_error "Unable to access the host"; exit 2 }
   -re $prompt
 }
 
