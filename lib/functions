@@ -155,22 +155,6 @@ function ops_copy() {
   remove_remote_dir "${work_dir}"
 }
 
-function ops_batch_copy() {
-  if [ ! -f "${copylist}" ]; then
-    abort "${copylist} file not found."
-  fi
-
-  declare -r ifs_save=$IFS
-  IFS='	'
-  for line in $(cat "${copylist}"| grep -v -e '^\s*#' -e '^\s*$'); do
-    set -- ${line}
-    echo "$line"
-    ops_copy "${1}" "${2}" "${3}" "${4}" "${5}"
-    echo 'success'
-  done
-  IFS=${ifs_save}
-}
-
 function ops_fetch() {
   passlist "${1:?}"
   declare -r src="${2:?}"
@@ -199,6 +183,25 @@ function ops_fetch() {
   sshpass -p "${password}" scp $(ssh_args) -r "${username}"@"${hostname}":${work_path} "${dest}" > /dev/null 2>&1
 
   remove_remote_dir "${work_dir}"
+}
+
+#############################################
+# 廃止予定
+
+function ops_batch_copy() {
+  if [ ! -f "${copylist}" ]; then
+    abort "${copylist} file not found."
+  fi
+
+  declare -r ifs_save=$IFS
+  IFS='	'
+  for line in $(cat "${copylist}"| grep -v -e '^\s*#' -e '^\s*$'); do
+    set -- ${line}
+    echo "$line"
+    ops_copy "${1}" "${2}" "${3}" "${4}" "${5}"
+    echo 'success'
+  done
+  IFS=${ifs_save}
 }
 
 function ops_collect() {
