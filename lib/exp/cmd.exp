@@ -43,9 +43,8 @@ if { [string length $cmd] > 0 } {
   expect {
     -re "(\n.*\r)(.*$prompt)"
   }
-  set msg "$expect_out(1,string)"
-  set len [string length $msg]
-  send_user "[string range $msg 1 $len]\n"
+  set msg [string trim "$expect_out(1,string)"]
+  send_user "$msg\n"
 
   # command status
   send -- "echo \$?\r"
