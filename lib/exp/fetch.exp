@@ -22,36 +22,37 @@ log_user 0
 set timeout 10
 spawn ssh -F ${ssh_config} -q -t -t $username@$hostname $root_cmd
 expect {
-  eof     { send_error "Connection rejected by the host"; exit 2 }
-  timeout { send_error "Unable to access the host"; exit 2 }
-  password: { send -- "$password\r" }
-  default { exit 2 }
+  eof     { send_error "SSH failure for host"; exit 1 }
+  timeout { send_error "Failed to get password prompt"; exit 1 }
+  password: 
 }
+send -- "$password\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
-  : { send -- "$root_password\r" }
-  default { exit 2 }
+  timeout { send_error "Unable to access the host"; exit 1 }
+  : 
 }
+send -- "$root_password\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
+  timeout { send_error "Login failed. Password incorrect."; exit 1 }
   -re $prompt
 }
 
-# execute command
 set timeout -1
+
+# execute command
 send -- "$cmd\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
-  -re $prompt
+  -re "(\n.*\r)(.*$prompt)"
 }
+set msg [string trim "$expect_out(1,string)"]
+send_user "$msg\n"
 
 # command status
 send -- "echo \$?\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
   -re "\n(\[^\r]*)\r"
 }
-set action_status "$expect_out(1,string)"
+set cmd_status "$expect_out(1,string)"
 
 expect {
   timeout { send_error "Unable to access the host"; exit 2 }
@@ -71,6 +72,6 @@ if { $os_error == -1 } {
 }
 set status [lindex $result 3]
 if { $status == 0 } {
-  exit $action_status
+  exit $cmd_status
 }
 exit $status
