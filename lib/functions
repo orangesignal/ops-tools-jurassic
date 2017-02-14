@@ -31,7 +31,7 @@ function passlist() {
     abort "${passlist} Pallist file not found."
   fi
 
-  local line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -e "^${hostname}")
+  local line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}")
   if [ "${line}" = '' ]; then
     abort "Unknown hostname ${1}"
   fi
@@ -48,11 +48,12 @@ function passlist() {
 }
 
 function ssh_args() {
-  echo "-F ${ssh_config} -q"
+  echo "-F ${ssh_config} -n -q"
 }
 
 function ops_ssh() {
-  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "${1}"
+  passlist "${1:?}"
+  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "${2}"
 }
 
 # リモート環境へ ssh ログインして引数で指定されたディレクトリが存在しなければ作成します。
@@ -74,7 +75,7 @@ function remove_remote_dir() {
   sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ -d ${p} ]; then rm -rf ${p}; fi"
   local ret=$?
   if [ $ret -ne 0 ]; then
-    echo >&2 "ERROR - Could not remove the remote folder [${hostname}:${p}]."
+    error "ERROR - Could not remove the remote folder [${hostname}:${p}]."
   fi
   return $ret
 }
@@ -195,12 +196,12 @@ function ops_fetch() {
     ${src} \
     "${work_dir}"
   ret=$?
-  if [ $ret -ne 0 ];
+  if [ $ret -ne 0 ]; then
     error "ERROR - Fetch failed."
   else
     sshpass -p "${password}" scp $(ssh_args) -r "${username}"@"${hostname}":${work_path} "${dest}" > /dev/null 2>&1
     ret=$?
-    if [ $ret -ne 0 ];
+    if [ $ret -ne 0 ]; then
       error "ERROR - scp failed."
     fi
   fi
