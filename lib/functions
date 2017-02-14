@@ -72,6 +72,11 @@ function make_remote_dir() {
 function remove_remote_dir() {
   local  p="${1:?}"
   sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ -d ${p} ]; then rm -rf ${p}; fi"
+  local ret=$?
+  if [ $ret -ne 0 ]; then
+    echo >&2 "ERROR - Could not remove the remote folder [${hostname}:${p}]."
+  fi
+  return $ret
 }
 
 function get_remote_home_dir() {
@@ -98,7 +103,7 @@ function ops_cmd() {
     "${root_password}" \
     "${cmd}" \
   )
-  ret="$?"
+  local ret="$?"
   echo "${result}"
   return $ret
 }
@@ -119,7 +124,7 @@ function ops_service() {
     "${service_name}" \
     "${command}" \
   )
-  ret="$?"
+  local ret="$?"
   echo "${result}"
   return $ret
 }
@@ -176,6 +181,7 @@ function ops_fetch() {
   local work_path_name="$(basename "${src}")"
   local work_path="${work_dir}/${work_path_name}"
 
+  local ret=0
   make_remote_dir "${work_dir}"
 
   local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
@@ -188,8 +194,17 @@ function ops_fetch() {
     "${root_password}" \
     ${src} \
     "${work_dir}"
-
-  sshpass -p "${password}" scp $(ssh_args) -r "${username}"@"${hostname}":${work_path} "${dest}" > /dev/null 2>&1
+  ret=$?
+  if [ $ret -ne 0 ];
+    error "ERROR - Fetch failed."
+  else
+    sshpass -p "${password}" scp $(ssh_args) -r "${username}"@"${hostname}":${work_path} "${dest}" > /dev/null 2>&1
+    ret=$?
+    if [ $ret -ne 0 ];
+      error "ERROR - scp failed."
+    fi
+  fi
 
   remove_remote_dir "${work_dir}"
+  return $ret
 }
