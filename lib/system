@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 TEXT_ESCAPE_START='\e['
 TEXT_ESCAPE_END='m'
@@ -15,3 +15,5 @@ TEXT_WHITE="${TEXT_ESCAPE_START}37${TEXT_ESCAPE_END}"
 
 function error() { echo -e "$@" 1>&2; }
 function abort() { echo -e "$@" 1>&2; exit 1; }
+
+function trace_run() { echo "+ $@"; "$@"; }

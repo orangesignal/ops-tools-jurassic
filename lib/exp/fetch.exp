@@ -20,7 +20,7 @@ set cmd "rsync -avh $src $dest && chown -R $username $dest && chmod -R +rw $dest
 # ssh login + switch to root
 log_user 0
 set timeout 10
-spawn ssh -F ${ssh_config} -q -t -t $username@$hostname $root_cmd
+spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
 expect {
   eof     { send_error "SSH failure for host"; exit 1 }
   timeout { send_error "Failed to get password prompt"; exit 1 }

@@ -1,8 +1,8 @@
-#!/bin/bash -e
+#!/bin/bash
 
 function make_dir() {
-  declare -r p="${1:?}"
-  if [ ! -d "${p}" ]; then
+  local p="${1:?}"
+  if [[ ! -d "${p}" ]]; then
     mkdir -p "${p}"
   fi
 }
@@ -16,7 +16,7 @@ function remove_dir() {
 
 function remake_dir() {
   local p="${1:?}"
-  remove_dir "${p}"
+  remove_dir "${p}" || exit $?
   mkdir -p "${p}"
 }
 
@@ -33,3 +33,6 @@ function parent() {
   echo "$(filename $(echo "${1%/*}"))"
 }
 
+function pwd2() {
+  echo "$(echo ${PWD} | sed 's|^/private/|/|g')"
+}

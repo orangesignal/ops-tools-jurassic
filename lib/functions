@@ -1,14 +1,11 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # Default config file locations
-#ssh_config="$(cd "$(dirname "$BASH_SOURCE")" && pwd)/../ssh_config"
 ssh_config="${ssh_config:-./ssh_config}"
 passlist="${passlist:-./passlist.tsv}"
-copylist="${copylist:-./copylist.tsv}"
-collect="${collect:-./collect.tsv}"
 
 function include() {
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
   source "${self_dir}/system"
   source "${self_dir}/io"
   source "${self_dir}/lang"
@@ -29,25 +26,33 @@ include
 #
 function passlist() {
   hostname="${1:?}"
-  declare -r line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -e "^${hostname}")
+
+  if [[ ! -f "${passlist}" ]]; then
+    abort "${passlist} Pallist file not found."
+  fi
+
+  local line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -e "^${hostname}")
   if [ "${line}" = '' ]; then
     abort "Unknown hostname ${1}"
   fi
 
-  declare -r ifs_save=$IFS
+  local ifs_save=$IFS
   IFS='	'
-
   set -- ${line}
+  IFS=${ifs_save}
+
   username=${2}
   password=${3}
   root_cmd=${4:-'sudo su -'}
   root_password=${5:-${password}}
-
-  IFS=${ifs_save}
 }
 
 function ssh_args() {
   echo "-F ${ssh_config} -q"
+}
+
+function ops_ssh() {
+  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "${1}"
 }
 
 # リモート環境へ ssh ログインして引数で指定されたディレクトリが存在しなければ作成します。
@@ -55,8 +60,8 @@ function ssh_args() {
 # 引数1 - 作成するディレクトリ
 #
 function make_remote_dir() {
-  declare -r target_dir="${1:?}"
-  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ ! -d ${target_dir} ]; then mkdir -p ${target_dir}; fi"
+  local p="${1:?}"
+  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ ! -d ${p} ]; then mkdir -p ${p}; fi"
 }
 
 #
@@ -65,8 +70,8 @@ function make_remote_dir() {
 # 引数1 - 削除するディレクトリ
 #
 function remove_remote_dir() {
-  declare -r target_dir="${1:?}"
-  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ -d ${target_dir} ]; then rm -rf ${target_dir}; fi"
+  local  p="${1:?}"
+  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ -d ${p} ]; then rm -rf ${p}; fi"
 }
 
 function get_remote_home_dir() {
@@ -81,10 +86,10 @@ function generate_work_dir_name() {
 
 function ops_cmd() {
   passlist "${1:?}"
-  declare -r cmd="${2}"
+  local cmd="${2}"
 
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-  declare -r result=$(expect -f ${self_dir}/exp/cmd.exp -- \
+  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  local result=$(expect -f ${self_dir}/exp/cmd.exp -- \
     "${ssh_config}" \
     "${hostname}" \
     "${username}" \
@@ -93,16 +98,18 @@ function ops_cmd() {
     "${root_password}" \
     "${cmd}" \
   )
+  ret="$?"
   echo "${result}"
+  return $ret
 }
 
 function ops_service() {
   passlist "${1:?}"
-  declare -r service_name="${2:?}"
-  declare -r command="${3:?}"
+  local service_name="${2:?}"
+  local command="${3:?}"
 
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-  declare -r result=$(expect -f ${self_dir}/exp/service.exp -- \
+  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  local result=$(expect -f ${self_dir}/exp/service.exp -- \
     "${ssh_config}" \
     "${hostname}" \
     "${username}" \
@@ -112,22 +119,24 @@ function ops_service() {
     "${service_name}" \
     "${command}" \
   )
+  ret="$?"
   echo "${result}"
+  return $ret
 }
 
 function ops_copy() {
   passlist "${1:?}"
-  declare -r src="${2:?}"
-  declare -r dest="${3:?}"
-  declare -r owner="${4}"
-  declare -r mode="${5}"
+  local src="${2:?}"
+  local dest="${3:?}"
+  local owner="${4}"
+  local mode="${5}"
 
-  declare -r remote_home_dir="$(get_remote_home_dir)"
-  declare -r work_dir_name="$(generate_work_dir_name)"
+  local remote_home_dir="$(get_remote_home_dir)"
+  local work_dir_name="$(generate_work_dir_name)"
 
-  declare -r work_dir="${remote_home_dir}/${work_dir_name}"
-  declare -r work_path_name="$(basename "${src}")"
-  declare -r work_path="${work_dir}/${work_path_name}"
+  local work_dir="${remote_home_dir}/${work_dir_name}"
+  local work_path_name="$(basename "${src}")"
+  local work_path="${work_dir}/${work_path_name}"
 
   make_remote_dir "${work_dir}"
 
@@ -135,7 +144,7 @@ function ops_copy() {
   sshpass -p "${password}" rsync -ahv -e "ssh $(ssh_args)" ${src} "${username}"@"${hostname}":"${work_dir}" > /dev/null 2>&1
 
   # copy work_path to dest (+ chown + chmod)
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
   expect -f ${self_dir}/exp/copy.exp -- \
     "${ssh_config}" \
     "${hostname}" \
@@ -157,19 +166,19 @@ function ops_copy() {
 
 function ops_fetch() {
   passlist "${1:?}"
-  declare -r src="${2:?}"
-  declare -r dest="${3:?}"
+  local src="${2:?}"
+  local dest="${3:?}"
 
-  declare -r remote_home_dir="$(get_remote_home_dir)"
-  declare -r work_dir_name="$(generate_work_dir_name)"
+  local remote_home_dir="$(get_remote_home_dir)"
+  local work_dir_name="$(generate_work_dir_name)"
 
-  declare -r work_dir="${remote_home_dir}/${work_dir_name}"
-  declare -r work_path_name="$(basename "${src}")"
-  declare -r work_path="${work_dir}/${work_path_name}"
+  local work_dir="${remote_home_dir}/${work_dir_name}"
+  local work_path_name="$(basename "${src}")"
+  local work_path="${work_dir}/${work_path_name}"
 
   make_remote_dir "${work_dir}"
 
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
   expect -f ${self_dir}/exp/fetch.exp -- \
     "${ssh_config}" \
     "${hostname}" \
