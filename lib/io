@@ -16,7 +16,7 @@ function remove_dir() {
 
 function remake_dir() {
   local p="${1:?}"
-  remove_dir "${p}" || exit $?
+  remove_dir "${p}" || return $?
   mkdir -p "${p}"
 }
 
