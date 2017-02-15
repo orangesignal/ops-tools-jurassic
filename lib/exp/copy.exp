@@ -17,18 +17,13 @@ set username      [lindex $argv 2]
 set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
-set src           [lindex $argv 6]
-set dest          [lindex $argv 7]
-set owner         [lindex $argv 8]
-set mode          [lindex $argv 9]
-
-set cmd "rsync -avh $src $dest"
-if { $owner ne "" } {
-  append cmd " && chown -R $owner $dest"
-}
-if { $mode ne "" } {
-  append cmd " && chmod -R $mode $dest"
-}
+set ops_file      [lindex $argv 6]
+set src           [lindex $argv 7]
+set dest          [lindex $argv 8]
+set owner         [lindex $argv 9]
+set mode          [lindex $argv 10]
+set backup        [lindex $argv 11]
+set suffix        [lindex $argv 12]
 
 # ssh login + switch to root
 log_user 0
@@ -53,7 +48,7 @@ expect {
 set timeout -1
 
 # execute command
-send -- "$cmd\r"
+send -- "bash $ops_file $src $dest $owner $mode $backup $suffix\r"
 expect {
   -re "(\n.*\r)(.*$prompt)"
 }

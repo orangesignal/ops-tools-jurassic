@@ -136,38 +136,60 @@ function ops_copy() {
   local dest="${3:?}"
   local owner="${4}"
   local mode="${5}"
+  local backup="${6}"
+  local suffix="${7}"
 
   local remote_home_dir="$(get_remote_home_dir)"
   local work_dir_name="$(generate_work_dir_name)"
 
-  local work_dir="${remote_home_dir}/${work_dir_name}"
+  local ops_dir="${remote_home_dir}/${work_dir_name}"
+  local ops_file="${ops_dir}/script"
+
+  local work_dir="${ops_dir}/${work_dir_name}"
   local work_path_name="$(basename "${src}")"
   local work_path="${work_dir}/${work_path_name}"
 
+  local ret=0
   make_remote_dir "${work_dir}"
+
+  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
 
   # copy src to work_dir
   sshpass -p "${password}" rsync -ahv -e "ssh $(ssh_args)" ${src} "${username}"@"${hostname}":"${work_dir}" > /dev/null 2>&1
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    error "ERROR - copy failed."
+  else
+    # copy remote script
+    sshpass -p "${password}" scp $(ssh_args) ${self_dir}/remote/copy.bash "${username}"@"${hostname}":${ops_file}" > /dev/null 2>&1
+    ret=$?
+    if [ $ret -ne 0 ]; then
+      error "ERROR - script failed."
+    else
+      # copy work_path to dest (+ chown + chmod)
+      local result=$(expect -f ${self_dir}/exp/copy.exp -- \
+        "${ssh_config}" \
+        "${hostname}" \
+        "${username}" \
+        "${password}" \
+        "${root_cmd}" \
+        "${root_password}" \
+        "${ops_file}" \
+        "${work_path}" \
+        "${dest}" \
+        "${owner}" \
+        "${mode}" \
+        "${backup}" \
+        "${suffix}" \
+      )
+      ret=$?
+      echo "${result}"
+    fi
+  fi
 
-  # copy work_path to dest (+ chown + chmod)
-  local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-  expect -f ${self_dir}/exp/copy.exp -- \
-    "${ssh_config}" \
-    "${hostname}" \
-    "${username}" \
-    "${password}" \
-    "${root_cmd}" \
-    "${root_password}" \
-    "${work_path}" \
-    "${dest}" \
-    "${owner}" \
-    "${mode}"
-#    "-avh --log-file=${rsync_log_file}"
+  remove_remote_dir "${ops_dir}"
 
-#  msg=$(sshpass -p ${password} ssh $(ssh_args) -q ${username}@${hostname} "cat ${rsync_log_file} && rm -rf ${work_dir}")
-#  echo "$msg"
-
-  remove_remote_dir "${work_dir}"
+  return $ret
 }
 
 function ops_fetch() {
@@ -207,5 +229,6 @@ function ops_fetch() {
   fi
 
   remove_remote_dir "${work_dir}"
+
   return $ret
 }
