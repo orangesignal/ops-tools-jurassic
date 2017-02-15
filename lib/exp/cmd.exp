@@ -3,6 +3,11 @@
 set env(TERM) vt100
 set env(LANG) C
 
+proc abort { msg } {
+  send_error "$msg"
+  exit 1
+}
+
 set prompt {[#>$]}
 set pw_prompt {[:]}
 
@@ -19,18 +24,18 @@ log_user 0
 set timeout 10
 spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
 expect {
-  eof     { send_error "SSH failure for host"; exit 1 }
-  timeout { send_error "Failed to get password prompt"; exit 1 }
+  eof     { abort "SSH failure for remote host $hostname\n" }
+  timeout { abort "Failed to get password prompt\n" }
   password: 
 }
 send -- "$password\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 1 }
+  timeout { abort "Login failed. Password incorrect.\n" }
   : 
 }
 send -- "$root_password\r"
 expect {
-  timeout { send_error "Login failed. Password incorrect."; exit 1 }
+  timeout { abort "Login failed. Password incorrect.\n" }
   -re $prompt
 }
 
@@ -66,7 +71,7 @@ expect eof
 catch wait result
 set os_error [lindex $result 2]
 if { $os_error == -1 } {
-  puts "Fail to exec"
+  send_error "Fail to exec\n"
   exit 127
 }
 set status [lindex $result 3]

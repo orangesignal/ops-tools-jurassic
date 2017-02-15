@@ -48,7 +48,7 @@ function passlist() {
 }
 
 function ssh_args() {
-  echo "-F ${ssh_config} -n -q"
+  echo "-nq -F ${ssh_config}"
 }
 
 function ops_ssh() {

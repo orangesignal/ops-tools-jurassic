@@ -3,6 +3,11 @@
 set env(TERM) vt100
 set env(LANG) C
 
+proc abort { msg } {
+  send_error "$msg"
+  exit 1
+}
+
 set prompt {[#>$]}
 set pw_prompt {[:]}
 
@@ -30,18 +35,16 @@ log_user 0
 set timeout 10
 spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
 expect {
-  eof     { send_error "Connection rejected by the host"; exit 2 }
-  timeout { send_error "Unable to access the host"; exit 2 }
+  eof     { abort "SSH failure for remote host $hostname\n" }
+  timeout { abort "Failed to get password prompt\n" }
   password: { send -- "$password\r" }
-  default { exit 2 }
 }
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
+  timeout { abort "Login failed. Password incorrect.\n" }
   : { send -- "$root_password\r" }
-  default { exit 2 }
 }
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
+  timeout { abort "Login failed. Password incorrect.\n" }
   -re $prompt
 }
 
@@ -49,20 +52,17 @@ expect {
 set timeout -1
 send -- "$cmd\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
   -re $prompt
 }
 
 # command status
 send -- "echo \$?\r"
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
   -re "\n(\[^\r]*)\r"
 }
 set action_status "$expect_out(1,string)"
 
 expect {
-  timeout { send_error "Unable to access the host"; exit 2 }
   -re $prompt
 }
 
@@ -74,7 +74,7 @@ expect eof
 catch wait result
 set os_error [lindex $result 2]
 if { $os_error == -1 } {
-  puts "Fail to exec"
+  send_error "Fail to exec\n"
   exit 127
 }
 set status [lindex $result 3]
