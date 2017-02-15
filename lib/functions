@@ -31,7 +31,7 @@ function passlist() {
     abort "${passlist} Pallist file not found."
   fi
 
-  local line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}")
+  local line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}	")
   if [ "${line}" = '' ]; then
     abort "Unknown hostname ${1}"
   fi
