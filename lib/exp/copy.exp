@@ -25,6 +25,28 @@ set mode          [lindex $argv 10]
 set backup        [lindex $argv 11]
 set suffix        [lindex $argv 12]
 
+set cmd "bash $ops_file $src $dest"
+if { $owner ne "" } {
+  append cmd " $owner"
+} else {
+  append cmd " ''"
+}
+if { $mode ne "" } {
+  append cmd " $mode"
+} else {
+  append cmd " ''"
+}
+if { $backup ne "" } {
+  append cmd " $backup"
+} else {
+  append cmd " ''"
+}
+if { $suffix ne "" } {
+  append cmd " $suffix"
+} else {
+  append cmd " ''"
+}
+
 # ssh login + switch to root
 log_user 0
 set timeout 10
@@ -48,7 +70,7 @@ expect {
 set timeout -1
 
 # execute command
-send -- "bash $ops_file $src $dest $owner $mode $backup $suffix\r"
+send -- "$cmd\r"
 expect {
   -re "(\n.*\r)(.*$prompt)"
 }
