@@ -1,16 +1,21 @@
 #!/bin/bash -e
+# 
+# root switch test
+# 
 
-#ssh_config=
-#passlist=
+self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+source "${self_dir}/lib/functions"
 
-function include() {
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-  source "${self_dir}/lib/functions"
-}
-include
+ssh_config="${self_dir}/ssh_config"
+passlist="${self_dir}/passlist"
 
-function ops_root_test() {
-  local result=$(ops_cmd "${1}" 'hostname')
+function test_root() {
+  local result=$(ops_cmd "${1}" 'uname -n')
+  local ret=$?
+  if [ $ret  -ne 0 ]; then
+    error "${TEXT_RED}ERROR - ${1}${TEST_RESET}"
+    return $ret
+  fi
   if [ "${result}" = "$1" ]; then
     echo -e "${TEXT_GREEN}OK - ${1}${TEXT_RESET}"
     return 0
@@ -31,7 +36,8 @@ while read line; do
 #      echo -e "${TEXT_YELLOW}SKIP - ${1}${TEXT_RESET}"
       ;;
     * )
-      ops_root_test "${1}"
+      test_root "${1}"
       ;;
   esac
+
 done < "${passlist}"
