@@ -62,7 +62,7 @@ function ops_ssh() {
 #
 function make_remote_dir() {
   local p="${1:?}"
-  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} "if [ ! -d ${p} ]; then mkdir -p ${p}; fi"
+  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} bash -c "\"if [[ ! -d ${p} ]]; then mkdir -p ${p}; fi\""
 }
 
 #
@@ -72,7 +72,7 @@ function make_remote_dir() {
 #
 function remove_remote_dir() {
   local  p="${1:?}"
-  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} "if [ -d ${p} ]; then rm -rf ${p}; fi"
+  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} bash -c "\"if [[ -d ${p} ]]; then rm -rf ${p}; fi\""
   local ret=$?
   if [ $ret -ne 0 ]; then
     error "ERROR - Could not remove the remote folder [${hostname}:${p}]."
