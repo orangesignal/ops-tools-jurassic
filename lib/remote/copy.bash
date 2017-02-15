@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 src=${1:?}
 dest="${2:?}"
