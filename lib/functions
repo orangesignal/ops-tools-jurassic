@@ -48,12 +48,12 @@ function passlist() {
 }
 
 function ssh_args() {
-  echo "-nq -F ${ssh_config}"
+  echo "-q -F ${ssh_config}"
 }
 
 function ops_ssh() {
   passlist "${1:?}"
-  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "${2}"
+  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} "${2}"
 }
 
 # リモート環境へ ssh ログインして引数で指定されたディレクトリが存在しなければ作成します。
@@ -62,7 +62,7 @@ function ops_ssh() {
 #
 function make_remote_dir() {
   local p="${1:?}"
-  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ ! -d ${p} ]; then mkdir -p ${p}; fi"
+  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} "if [ ! -d ${p} ]; then mkdir -p ${p}; fi"
 }
 
 #
@@ -72,7 +72,7 @@ function make_remote_dir() {
 #
 function remove_remote_dir() {
   local  p="${1:?}"
-  sshpass -p "${password}" ssh $(ssh_args) ${username}@${hostname} "if [ -d ${p} ]; then rm -rf ${p}; fi"
+  sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} "if [ -d ${p} ]; then rm -rf ${p}; fi"
   local ret=$?
   if [ $ret -ne 0 ]; then
     error "ERROR - Could not remove the remote folder [${hostname}:${p}]."
