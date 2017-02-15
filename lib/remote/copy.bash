@@ -11,17 +11,19 @@ suffix="${6:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
 old_backup="${backup}"
 
-if [ "${backup}" != '' ]; then
-  # moving old backup directory
-  while [ -e "${old_backup}" ]; do
-    old_backup="${old_backup}${suffix}"
-  done
-  if [ "${backup}" != "${old_backup}" ]; then
-    mv "${backup}" "${old_backup}"
-  fi
+if [ -e "${dest}" ]; then
+  if [ "${backup}" != '' ]; then
+    # moving old backup directory
+    while [ -e "${old_backup}" ]; do
+      old_backup="${old_backup}${suffix}"
+    done
+    if [ "${backup}" != "${old_backup}" ]; then
+      mv "${backup}" "${old_backup}"
+    fi
 
-  # backup
-  rsync -avh "${dest}" "${backup}"
+    # backup
+    rsync -avh "${dest}" "${backup}"
+  fi
 fi
 
 # copy
