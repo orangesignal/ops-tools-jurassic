@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 src=${1:?}
 dest="${2:?}"
@@ -9,20 +9,16 @@ mode="${4}"
 backup="${5}"
 suffix="${6:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
-old_backup="${backup}"
-
 if [ -e "${dest}" ]; then
   if [ "${backup}" != '' ]; then
-    # moving old backup directory
-    while [ -e "${old_backup}" ]; do
-      old_backup="${old_backup}${suffix}"
+    backup_path="${backup}${suffix}"
+
+    while [ -e "${backup_path}" ]; do
+      backup_path="${backup_path}${suffix}"
     done
-    if [ "${backup}" != "${old_backup}" ]; then
-      mv "${backup}" "${old_backup}"
-    fi
 
     # backup
-    rsync -avh "${dest}" "${backup}"
+    rsync -avh "${dest}" "${backup_path}"
   fi
 fi
 

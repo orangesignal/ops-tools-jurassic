@@ -161,7 +161,7 @@ function ops_copy() {
     error "ERROR - copy failed."
   else
     # copy remote script
-    sshpass -p "${password}" scp $(ssh_args) ${self_dir}/remote/copy.bash "${username}"@"${hostname}":${ops_file}" > /dev/null 2>&1
+    sshpass -p "${password}" scp $(ssh_args) ${self_dir}/remote/copy.bash "${username}"@"${hostname}":"${ops_file}" > /dev/null 2>&1
     ret=$?
     if [ $ret -ne 0 ]; then
       error "ERROR - script failed."
