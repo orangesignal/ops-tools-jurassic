@@ -18,6 +18,13 @@
 apt-get install sshpass expect
 ```
 
+# インストール
+
+```
+git clone https://github.com/orangesignal/ops-tools-jurassic.git
+chmod +x ops-tools-jurassic/ops
+```
+
 # 設定
 
 ## ssh_config
@@ -34,7 +41,16 @@ apt-get install sshpass expect
 
 # 使い方
 
-TODO - いずれ書く(つもり)。ソースを見て。
+コマンド全般の使い方
+```
+./ops -h
+```
+
+個別の使い方
+```
+./ops [test|ssh|cmd|service|fetch|copy] -h
+```
+
 
 # ライセンス
 
