@@ -8,7 +8,6 @@ function include() {
   local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
   source "${self_dir}/system"
   source "${self_dir}/io"
-  source "${self_dir}/lang"
 }
 include
 
