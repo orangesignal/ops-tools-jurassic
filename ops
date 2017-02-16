@@ -1,22 +1,229 @@
-#!/bin/bash -e
+#!/bin/bash
 
-function include() {
-  declare -r self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-  source "${self_dir}/lib/functions"
+set -e
+
+function self_dir() {
+	echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
 }
-include
+source "$(self_dir)/lib/functions"
 
-case "${1?}" in
-	exec )
-		ops_cmd "${2}" "${3}"
+function myname() {
+	echo "$(basename $BASH_SOURCE)"
+}
+
+function show_version() {
+cat << END
+$(myname) version 0.1
+Copyright 2017 OrangeSignal (Koji Sugisawa).
+Licensed under the Apache License, Version 2.0
+END
+}
+
+function show_common_params() {
+cat << END
+
+Common parameters:
+  -F               ssh_config file
+  -p               passlist file
+  -h, --help       display this help and exit
+  -v, --version    output version information and exit
+END
+}
+
+function show_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] [test|root|ssh|cmd|command|service|fetch|copy hostname args...] [-h|--help] [-v|--version]
+指定された ops アクションを実行します。
+$(show_common_params)
+
+ops アクション名付きの -h または --help を指定することで各アクションの使い方を表示します。
+
+  $(myname) test --help
+  $(myname) cmd --help
+  $(myname) service --help
+
+END
+}
+
+function show_test_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] test hostname
+指定されたホストへ SSH 接続して、環境確認用のコマンドを実行します。
+$(show_common_params)
+
+END
+}
+
+function show_root_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] root hostname
+指定されたホストへ SSH 接続 + root 化して環境確認用のコマンドを実行します。
+$(show_common_params)
+
+END
+}
+
+function show_ssh_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] ssh hostname [command]
+指定されたホストへ SSH 接続して、指定されたコマンドを実行します。
+$(show_common_params)
+
+Examples:
+  $(myname) cmd www01 'uname -n && env'
+
+END
+}
+
+function show_cmd_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] cmd|command hostname [command]
+指定されたホストへ SSH 接続 + root 化して指定されたコマンドを実行します。
+$(show_common_params)
+
+Examples:
+  $(myname) cmd web01 'uname -n && env'
+
+END
+}
+
+function show_service_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] service hostname service_name [command]
+指定されたホストへ SSH 接続 + root 化して指定されたサービスへコマンドを実行します。
+$(show_common_params)
+
+Examples:
+  $(myname) service w01 jenkins restart
+
+END
+}
+
+function show_fetch_usage() {
+cat << END
+Usage: $(myname) [-F ssh_config] [-p passlist] fetch hostname src dest
+指定されたホストへ SSH 接続 + root 化してリモートの src からローカルの dest へ複数のファイルまたはディレクトリを取得します。
+$(show_common_params)
+
+Examples:
+  $(myname) fetch w01 /var/spool/cron /var/tmp/w01-cron
+
+END
+}
+
+function show_copy_usage() {
+cat <<'END'
+Usage: ops [-F ssh_config] [-p passlist] copy hostname src dest [--owner=[owner][:group]] [--mode=mode] [--backup=path] [--suffix=suffix]
+指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
+
+Parameters:
+  --owner          owner and/or group
+  --mode           mode
+  --backup         backup path
+  --suffix         override the usual backup suffix
+$(show_common_params)
+
+Examples:
+  ops copy w01 /var/tmp/w01/example.html /home/devops/example.html
+  ops copy w01 /var/tmp/w01/example.bash /home/devops/example.bash --owner=devops --mode='+x'
+  ops copy w01 /var/tmp/w01/example.conf /home/devops/example.conf --backup=/var/tmp/example.conf --suffix=".$(date +%Y%m%d%H%M)"
+  ops copy w01 /var/tmp/w01 /home/devops/examples --mode='+rw' --backup=yes
+
+END
+}
+
+function parse_args() {
+	ops_type=
+	ops_args=()
+
+	while [ $# -ne 0 ]; do
+		case "${1}" in
+			-- )
+				shift
+				break
+				;;
+
+			-v | --version )
+				show_version
+				exit 0
+				;;
+
+			-h | --help )
+				case "${ops_type}" in
+					test )			show_test_usage;;
+					root )			show_root_usage;;
+					ssh )			show_ssh_usage;;
+					cmd | command )	show_cmd_usage;;
+					service )		show_service_usage;;
+					fetch )			show_fetch_usage;;
+					copy )			show_copy_usage;;
+					* )				show_usage;;
+				esac
+				exit 0
+				;;
+			-F )
+				if [ ! -f "${2}" ]; then
+					abort "$(myname): -F ${2} ssh_config file not found."
+				fi
+				ssh_config="${2}"
+				shift 2
+				;;
+			-p )
+				if [ ! -f "${2}" ]; then
+					abort "$(myname): -p ${2} passlist file not found."
+				fi
+				passlist="${2}"
+				shift 2
+				;;
+			test | root | ssh | cmd | command | service | fetch | copy )
+				ops_type="${1}"
+				shift
+				;;
+			*)
+				ops_args+=("${1}")
+				shift
+				;;
+		esac
+	done
+
+	while [ $# -ne 0 ]; do
+		ops_args+=("${1}")
+		shift
+	done
+
+	if [ "${ops_type}" = '' ]; then
+		abort "$(myname): Unknown ops action."
+	fi
+	if [ ${#ops_args[@]} -eq 0 ]; then
+		abort "$(myname): Unknown hostaname."
+	fi
+}
+
+parse_args "$@"
+
+case "${ops_type}" in
+	test )
+		ops_ssh "${ops_args[0]}" 'uname -n && whoami'
 		;;
-	fetch )
+	root )
+		ops_cmd "${ops_args[0]}" 'uname -n && whoami'
 		;;
-	copy )
+	ssh )
+		ops_ssh "${ops_args[@]}"
+		;;
+	cmd | command )
+		ops_cmd "${ops_args[@]}"
 		;;
 	service )
-		ops_service "${2}" "${3}" "${4}"
+		ops_service "${ops_args[@]}"
+		;;
+	fetch )
+		ops_fetch "${ops_args[@]}"
+		;;
+	copy )
+		ops_copy "${ops_args[@]}"
 		;;
 	* )
+		abort "$(myname): Unsupported ops action."
 		;;
 esac
