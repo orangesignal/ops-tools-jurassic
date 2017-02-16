@@ -41,16 +41,27 @@ chmod +x ops-tools-jurassic/ops
 
 # 使い方
 
-コマンド全般の使い方
+指定したホストへ SSH 接続 + root 化してコマンドを実行する例
+```
+./ops cmd hostname 'ls -la'
+
+root 化する必要ない場合は、ssh アクションを使用します。
+./ops ssh hostname env
+```
+
+指定したホストへ SSH 接続 + root 化してサービスコマンドを実行する例
+```
+./ops cmd hostname 'service jenkins stop'
+
+プロセス確認したい場合は service アクションを使用します。
+./ops service hostname jenkins stop
+```
+
+コマンド全般の使い方はヘルプオプションで確認して下さい。
 ```
 ./ops -h
-```
-
-個別の使い方
-```
 ./ops [test|ssh|cmd|service|fetch|copy] -h
 ```
-
 
 # ライセンス
 
