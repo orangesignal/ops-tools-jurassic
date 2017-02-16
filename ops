@@ -113,28 +113,32 @@ END
 
 function show_copy_usage() {
 cat <<'END'
-Usage: ops [-F ssh_config] [-p passlist] copy hostname src dest [--owner=[owner][:group]] [--mode=mode] [--backup=path] [--suffix=suffix]
+Usage: ops [-F ssh_config] [-p passlist] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
 指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
 
 Parameters:
-  --owner          owner and/or group
-  --mode           mode
-  --backup         backup path
-  --suffix         override the usual backup suffix
+  -owner           owner and/or group
+  -mode            mode
+  -backup          backup path
+  -suffix          override the usual backup suffix
 $(show_common_params)
 
 Examples:
   ops copy w01 /var/tmp/w01/example.html /home/devops/example.html
-  ops copy w01 /var/tmp/w01/example.bash /home/devops/example.bash --owner=devops --mode='+x'
-  ops copy w01 /var/tmp/w01/example.conf /home/devops/example.conf --backup=/var/tmp/example.conf --suffix=".$(date +%Y%m%d%H%M)"
-  ops copy w01 /var/tmp/w01 /home/devops/examples --mode='+rw' --backup=yes
+  ops copy w01 /var/tmp/w01/example.bash /home/devops/example.bash -owner devops -mode '+x'
+  ops copy w01 /var/tmp/w01/example.conf /home/devops/example.conf -backup /var/tmp/example.conf -suffix ".$(date +%Y%m%d%H%M)"
+  ops copy w01 /var/tmp/w01 /home/devops/examples -mode +rw -backup yes
 
 END
 }
 
 function parse_args() {
 	ops_type=
-	ops_args=()
+	local _ops_args=()
+	local _owner=
+	local _mode=
+	local _backup=
+	local _suffix=
 
 	while [ $# -ne 0 ]; do
 		case "${1}" in
@@ -179,23 +183,97 @@ function parse_args() {
 				ops_type="${1}"
 				shift
 				;;
+			-owner )
+				if [ "${2}" = '' ]; then
+					abort "$(myname): -owner Illegal parameter."
+				fi
+				_owner="${2}"
+				shift 2
+				;;
+			-mode )
+				if [ "${2}" = '' ]; then
+					abort "$(myname): -mode Illegal parameter."
+				fi
+				_mode="${2}"
+				shift 2
+				;;
+			-backup )
+				if [ "${2}" = '' ]; then
+					abort "$(myname): -backup Illegal parameter."
+				fi
+				_backup="${2}"
+				shift 2
+				;;
+			-suffix )
+				if [ "${2}" = '' ]; then
+					abort "$(myname): -suffix Illegal parameter."
+				fi
+				_suffix="${2}"
+				shift 2
+				;;
 			*)
-				ops_args+=("${1}")
+				_ops_args+=("${1}")
 				shift
 				;;
 		esac
 	done
 
 	while [ $# -ne 0 ]; do
-		ops_args+=("${1}")
+		_ops_args+=("${1}")
 		shift
 	done
 
+	# check mandatory parameters
 	if [ "${ops_type}" = '' ]; then
 		abort "$(myname): Unknown ops action."
 	fi
-	if [ ${#ops_args[@]} -eq 0 ]; then
+	if [ "${_ops_args[0]}" = '' ]; then
 		abort "$(myname): Unknown hostaname."
+	fi
+
+	# check dependency parameters
+	case "${ops_type}" in
+		fetch | copy )
+			if [ "${_ops_args[1]}" = '' ]; then
+				abort "$(myname): Unknown src"
+			fi
+			if [ "${_ops_args[2]}" = '' ]; then
+				abort "$(myname): Unknown dest"
+			fi
+			;;
+		* )
+			;;
+	esac
+
+	# copy args
+	ops_args=()
+	if [ "${ops_type}" != 'copy' ]; then
+		ops_args+=("${_ops_args[@]}")
+	else
+		ops_args+=("${_ops_args[0]}")	# hostname
+		ops_args+=("${_ops_args[1]}")	# src
+		ops_args+=("${_ops_args[2]}")	# dest
+		ops_args+=("${_owner}")
+		ops_args+=("${_mode}")
+
+		case "${_backup}" in
+			[yY]es | [tTrue] | YES | TRUE )
+				_backup="${_ops_args[2]}"
+				;;
+			* )
+				;;
+		esac
+
+		ops_args+=("${_backup}")
+		ops_args+=("${_suffix}")
+
+		# others
+		local _max=${#_ops_args[@]}
+		local _index=3
+		while [ ${_index} -lt ${_max} ]; do
+			ops_args+=("${_ops_args[${_index}]}")
+			_index=$((_index + 1))
+		done
 	fi
 }
 
