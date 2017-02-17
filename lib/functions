@@ -37,7 +37,7 @@ function passlist() {
     elif [ -f "$(pwd)/passlist.tsv" ]; then
       _passlist="$(pwd)/passlist.tsv"
     else
-      abort "${passlist} Pallist file not found."
+      abort "Pallist file not found."
     fi
   elif [ ! -f "${passlist}" ]; then
     abort "${passlist} Pallist file not found."

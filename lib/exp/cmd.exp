@@ -45,7 +45,7 @@ if { $root_cmd eq "" } {
 ###############################################################################
 
 # ssh login + switch to root
-log_user 1
+log_user 0
 set timeout 10
 eval spawn ssh ${ssh_args} -t $username@$hostname $root_cmd
 
@@ -74,10 +74,12 @@ if { [string length $cmd] > 0 } {
   # execute command
   send -- "$cmd\r"
   expect {
-    -re "(\n.*\r)(.*$prompt)"
+    -re "(\n.*\r)(.*$prompt)" {
+      set msg [string trim "$expect_out(1,string)"]
+      send_user "$msg\n"
+    }
+    -re $prompt
   }
-  set msg [string trim "$expect_out(1,string)"]
-  send_user "$msg\n"
 
   # command status
   send -- "echo \$?\r"

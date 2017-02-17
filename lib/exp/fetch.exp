@@ -77,10 +77,12 @@ set timeout -1
 # execute command
 send -- "$cmd\r"
 expect {
-  -re "(\n.*\r)(.*$prompt)"
+  -re "(\n.*\r)(.*$prompt)" {
+    set msg [string trim "$expect_out(1,string)"]
+    send_user "$msg\n"
+  }
+  -re $prompt
 }
-set msg [string trim "$expect_out(1,string)"]
-send_user "$msg\n"
 
 # command status
 send -- "echo \$?\r"
