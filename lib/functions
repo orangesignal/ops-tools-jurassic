@@ -100,6 +100,73 @@ function generate_work_dir_name() {
 
 ###############################################################################
 
+function _internal_ops() {
+  declare -r _ops_dir="${1}"
+  shift
+  declare -r _work_dir="${1:-${_ops_dir}}"
+  shift
+  declare -r _send_src="${1}"
+  shift
+  declare -r _send_dest="${1}"
+  shift
+  declare -r _receive_src="${1}"
+  shift
+  declare -r _receive_dest="${1}"
+  shift
+  declare -r _remote_file="${1}"
+  shift
+  declare -r _expect_file="${1}"
+  shift
+
+  declare -i _ret=0
+
+  # create remote working directory
+  if [ "${_work_dir}" != '' ]; then
+    make_remote_dir "${_work_dir}"
+    _ret=$?
+    if [ ${_ret} -ne 0 ]; then
+      return ${_ret}
+    fi
+  fi
+
+  # send
+  if [ "${_send_src}" != '' ]; then
+    sshpass -p "${password}" rsync -ahv -e "ssh $(ssh_args)" ${rsync_args} ${_send_src} "${username}"@"${hostname}":"${_send_dest}" > /dev/null 2>&1
+    _ret=$?
+  fi
+
+  if [ ${_ret} -ne 0 ]; then
+    # copy remote script
+    if [ "${_remote_file}" != '' ]; then
+      sshpass -p "${password}" scp $(ssh_args) ${scp_args} "${_remote_file}" "${username}"@"${hostname}":"${_ops_dir}/script" > /dev/null 2>&1
+      _ret=$?
+      if [ ${_ret} -ne 0 ]; then
+        error "ERROR - script failed."
+      fi
+    fi
+
+    # expect
+    if [ ${_ret} -eq 0 ]; then
+      declare -r _msg=$(expect -f "${_expect_file}" -- "$@")
+      _ret=$?
+      echo "${_msg}"
+
+      # receive
+      if [ ${_ret} -eq 0 ]; then
+        sshpass -p "${password}" scp $(ssh_args) ${scp_args} -r "${username}"@"${hostname}":${_receive_src} "${_receive_dest}" > /dev/null 2>&1
+        _ret=$?
+      fi
+    fi
+  fi
+
+  # remove remote working directory
+  if [ "${_ops_dir}" != '' ]; then
+    remove_remote_dir "${_ops_dir}"
+  fi
+
+  return ${_ret}
+}
+
 function ops_cmd() {
   passlist "${1}"
   shift
