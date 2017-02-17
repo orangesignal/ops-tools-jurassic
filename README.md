@@ -6,7 +6,7 @@
 - 一々 tty を求めてくる
 - パスワード認証 + 踏み台サーバー
 
-# 必要条件
+## 必要条件
 
 ローカル環境には以下が必要です。
 
@@ -29,23 +29,23 @@ ssh, scp, rsync が使える環境で root 化可能であることが前提と�
 
 `copy` アクションや `fetch` アクションなどファイルのやりとりをする機能を使用する場合は、`bash` も必要となります。
 
-# インストール
+## インストール
 
 ```
 git clone https://github.com/orangesignal/ops-tools-jurassic.git
 chmod +x ops-tools-jurassic/ops
 ```
 
-# 設定
+## 設定
 
-## ssh_config
+### ssh_config
 
 `ssh` や `scp`、`rsync` などセキュアコマンド操作時にリモートサーバーの接続情報として使用します。
 踏み台サーバーを使用する場合、`ssh_config` にプロキシ設定の記載をする必要があります。
 本プロジェクトに付属のサンプルをご覧下さい。   
 尚、`ssh_config` ファイルの書きっぷりについては、`ssh_config` の公式ページなどをご覧下さい。
 
-## passlist
+### passlist
 
 サーバー毎のユーザー名やパスワード、root 化コマンド、root 化パスワードなどを定義します。
 1サーバーで複数ユーザーを使い分けている場合は、`passlist` ファイルを複数作成して使い分けて下さい。   
@@ -56,27 +56,23 @@ w01	devops	123456	sudo su -
 w02	devops2	234567	su -	
 ```
 
-# 使い方
+## 使い方
 
-以下は指定したホストへ SSH 接続 + root 化してコマンドを実行する例です。
+以下は、指定したホストへ SSH 接続 + root 化してコマンドを実行する例です。
 
 ```
-./ops cmd hostname 'ls -la'
-```
-
-passlist ファイルが指定されていない場合は、カレントディレクトリの passlist、passlist.tsv を順番に検索し一致するファイルがあればそれを使用します。   
-ssh_config ファイルが指定されていない場合は、ssh の仕様と同様です。   
+./ops cmd hostname ls -la
 
 root 化する必要ない場合は、ssh アクションを使用します。
-
-```
 ./ops ssh hostname env
 ```
 
+passlist ファイルが指定されていない場合は、カレントディレクトリの passlist、passlist.tsv を順番に検索し一致するファイルを使用します。   
+ssh_config ファイルが指定されていない場合は、ssh の仕様と同様です。   
 
-指定したホストへ SSH 接続 + root 化してサービスコマンドを実行する例
+以下は、指定したホストへ SSH 接続 + root 化してサービスコマンドを実行する例です。
 ```
-./ops cmd hostname 'service jenkins stop'
+./ops cmd hostname service jenkins stop
 
 プロセス確認したい場合は service アクションを使用します。
 ./ops service hostname jenkins stop
@@ -88,6 +84,6 @@ root 化する必要ない場合は、ssh アクションを使用します。
 ./ops [test|ssh|cmd|service|fetch|copy] -h
 ```
 
-# ライセンス
+## License
 
-Apache ライセンス
+* Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
