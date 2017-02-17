@@ -1,12 +1,21 @@
 #!/usr/bin/expect -f
 
-set env(TERM) vt100
-set env(LANG) C
+if { [llength $argv] == 0 } {
+  puts "Usage: expect -f $argv0 -- ssh_config hostname username \'password\' root_cmd \'root_password\' \[command...\]"
+  exit 0
+}
+
+###############################################################################
 
 proc abort { msg } {
   send_error "$msg"
   exit 1
 }
+
+###############################################################################
+
+set env(TERM) vt100
+set env(LANG) C
 
 set prompt {[#>$]}
 set pw_prompt {[:]}
@@ -19,10 +28,32 @@ set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
 set cmd           [lindex $argv 6]
 
+for { set i 7 } { $i < [llength $argv] } { incr i } {
+  append cmd " [lindex $argv $i]"
+}
+
+if { $ssh_config eq "" } {
+  abort "ssh_config must not be null\n"
+}
+if { $hostname eq "" } {
+  abort "hostname must not be null\n"
+}
+if { $username eq "" } {
+  abort "username must not be null\n"
+}
+if { $root_cmd eq "" } {
+  abort "root_cmd must not be null\n"
+}
+
+###############################################################################
+
 # ssh login + switch to root
 log_user 0
 set timeout 10
 spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
+
+###############################################################################
+
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
@@ -66,7 +97,9 @@ if { [string length $cmd] > 0 } {
 # root exit
 send -- "exit\r"
 
+###############################################################################
 # terminate
+
 expect eof
 catch wait result
 set os_error [lindex $result 2]
