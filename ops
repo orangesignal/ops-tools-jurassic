@@ -112,8 +112,8 @@ END
 }
 
 function show_copy_usage() {
-cat <<'END'
-Usage: ops [-F ssh_config] [-p passlist] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
+cat <<END
+Usage: $(myname) [-F ssh_config] [-p passlist] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
 指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
 
 Parameters:
@@ -123,6 +123,8 @@ Parameters:
   -suffix          override the usual backup suffix
 $(show_common_params)
 
+END
+cat <<'END'
 Examples:
   ops copy w01 /var/tmp/w01/example.html /home/devops/example.html
   ops copy w01 /var/tmp/w01/example.bash /home/devops/example.bash -owner devops -mode '+x'
@@ -257,7 +259,7 @@ function parse_args() {
 		ops_args+=("${_mode}")
 
 		case "${_backup}" in
-			[yY]es | [tTrue] | YES | TRUE )
+			[yY]es | [tT]rue | YES | TRUE )
 				_backup="${_ops_args[2]}"
 				;;
 			* )
