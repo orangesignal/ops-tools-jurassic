@@ -3,8 +3,8 @@
 # Default config file locations
 ssh_config="${ssh_config:-./ssh_config}"
 passlist="${passlist:-./passlist.tsv}"
-scp_args=
-rsync_args=
+scp_args="${scp_args}"
+rsync_args="${rsync_args}"
 
 function include() {
   local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
