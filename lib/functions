@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Default config file locations
-ssh_config="${ssh_config:-./ssh_config}"
-passlist="${passlist:-./passlist.tsv}"
+ssh_config="${ssh_config}"
+passlist="${passlist}"
 scp_args="${scp_args}"
 rsync_args="${rsync_args}"
 
@@ -28,13 +28,26 @@ function passlist() {
   if [ "${1}" = '' ]; then
     abort "hostname must not be null."
   fi
-  if [[ ! -f "${passlist}" ]]; then
+
+  local _passlist=
+  if [ "${passlist}" = '' ]; then
+    # find passlist
+    if [ -f "$(pwd)/passlist" ]; then
+      _passlist="$(pwd)/passlist"
+    elif [ -f "$(pwd)/passlist.tsv" ]; then
+      _passlist="$(pwd)/passlist.tsv"
+    else
+      abort "${passlist} Pallist file not found."
+    fi
+  elif [ ! -f "${passlist}" ]; then
     abort "${passlist} Pallist file not found."
+  else
+    _passlist="${passlist}"
   fi
 
   hostname="${1}"
 
-  declare -r _line=$(cat "${passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}	")
+  declare -r _line=$(cat "${_passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}	")
   if [ "${_line}" = '' ]; then
     abort "Unknown hostname ${hostname}"
   fi
@@ -51,7 +64,11 @@ function passlist() {
 }
 
 function ssh_args() {
-  echo "-q -F ${ssh_config}"
+  local _ssh_config_arg=
+  if [ "${ssh_config}" != '' ]; then
+    _ssh_config_arg=" -F ${ssh_config}"
+  fi
+  echo "-q${_ssh_config_arg}"
 }
 
 function ops_ssh() {
@@ -68,7 +85,6 @@ function make_remote_dir() {
   if [ "${1}" = '' ]; then
     abort "path must not be null."
   fi
-
   sshpass -p "${password}" ssh -n $(ssh_args) ${username}@${hostname} bash -c "\"if [[ ! -d ${1} ]]; then mkdir -p ${1}; fi\""
 }
 
@@ -172,7 +188,7 @@ function ops_cmd() {
   shift
 
   declare -r _msg=$(expect -f "$(self_dir)/exp/cmd.exp" -- \
-    "${ssh_config}" \
+    "$(ssh_args)" \
     "${hostname}" \
     "${username}" \
     "${password}" \
@@ -190,7 +206,7 @@ function ops_service() {
   shift
 
   declare -r _msg=$(expect -f "$(self_dir)/exp/service.exp" -- \
-    "${ssh_config}" \
+    "$(ssh_args)" \
     "${hostname}" \
     "${username}" \
     "${password}" \
@@ -241,7 +257,7 @@ function ops_copy() {
     else
       # copy work_path to dest (+ chown + chmod)
       declare -r _msg=$(expect -f "$(self_dir)/exp/copy.exp" -- \
-        "${ssh_config}" \
+        "$(ssh_args)" \
         "${hostname}" \
         "${username}" \
         "${password}" \
@@ -283,7 +299,7 @@ function ops_fetch() {
   make_remote_dir "${_work_dir}"
 
   expect -f "$(self_dir)/exp/fetch.exp" -- \
-    "${ssh_config}" \
+    "$(ssh_args)" \
     "${hostname}" \
     "${username}" \
     "${password}" \

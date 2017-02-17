@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- ssh_config hostname username \'password\' root_cmd \'root_password\' ops_file src dest \[\'owner\' \'mode\' \'backup\' \'suffix\'\]"
+  puts "Usage: expect -f $argv0 -- ¥'ssh_args¥' hostname username \'password\' root_cmd \'root_password\' ops_file src dest \[\'owner\' \'mode\' \'backup\' \'suffix\'\]"
   exit 0
 }
 
@@ -20,7 +20,7 @@ set env(LANG) C
 set prompt {[#>$]}
 set pw_prompt {[:]}
 
-set ssh_config    [lindex $argv 0]
+set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
 set username      [lindex $argv 2]
 set password      [lindex $argv 3]
@@ -34,9 +34,6 @@ set mode          [lindex $argv 10]
 set backup        [lindex $argv 11]
 set suffix        [lindex $argv 12]
 
-if { $ssh_config eq "" } {
-  abort "ssh_config must not be null\n"
-}
 if { $hostname eq "" } {
   abort "hostname must not be null\n"
 }
@@ -84,7 +81,7 @@ if { $suffix ne "" } {
 # ssh login + switch to root
 log_user 0
 set timeout 10
-spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
+eval spawn ssh ${ssh_args} -t $username@$hostname $root_cmd
 
 ###############################################################################
 
