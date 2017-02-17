@@ -3,16 +3,16 @@
 set -e
 
 function self_dir() {
-	echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+  echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
 }
 source "$(self_dir)/lib/functions"
 
 function myname() {
-	echo "$(basename $BASH_SOURCE)"
+  echo "$(basename $BASH_SOURCE)"
 }
 
 function show_version() {
-cat << END
+cat <<END
 $(myname) version 0.1
 Copyright 2017 OrangeSignal (Koji Sugisawa).
 Licensed under the Apache License, Version 2.0
@@ -20,7 +20,7 @@ END
 }
 
 function show_common_params() {
-cat << END
+cat <<END
 
 Common parameters:
   -F               ssh_config file
@@ -31,7 +31,7 @@ END
 }
 
 function show_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] [test|root|ssh|cmd|command|service|fetch|copy hostname args...] [-h|--help] [-v|--version]
 指定された ops アクションを実行します。
 $(show_common_params)
@@ -46,7 +46,7 @@ END
 }
 
 function show_test_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] test hostname
 指定されたホストへ SSH 接続して、環境確認用のコマンドを実行します。
 $(show_common_params)
@@ -55,7 +55,7 @@ END
 }
 
 function show_root_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] root hostname
 指定されたホストへ SSH 接続 + root 化して環境確認用のコマンドを実行します。
 $(show_common_params)
@@ -64,7 +64,7 @@ END
 }
 
 function show_ssh_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] ssh hostname [command]
 指定されたホストへ SSH 接続して、指定されたコマンドを実行します。
 $(show_common_params)
@@ -76,7 +76,7 @@ END
 }
 
 function show_cmd_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] cmd|command hostname [command]
 指定されたホストへ SSH 接続 + root 化して指定されたコマンドを実行します。
 $(show_common_params)
@@ -88,7 +88,7 @@ END
 }
 
 function show_service_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] service hostname service_name [command]
 指定されたホストへ SSH 接続 + root 化して指定されたサービスへコマンドを実行します。
 $(show_common_params)
@@ -100,7 +100,7 @@ END
 }
 
 function show_fetch_usage() {
-cat << END
+cat <<END
 Usage: $(myname) [-F ssh_config] [-p passlist] fetch hostname src dest
 指定されたホストへ SSH 接続 + root 化してリモートの src からローカルの dest へ複数のファイルまたはディレクトリを取得します。
 $(show_common_params)
