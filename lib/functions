@@ -197,7 +197,7 @@ function ops_cmd() {
     "$@" \
   )
   declare -ri _ret=$?
-  echo "${_msg}"
+  echo_ifneed "${_msg}"
   return ${_ret}
 }
 
@@ -215,7 +215,7 @@ function ops_service() {
     "$@" \
   )
   declare -ri _ret=$?
-  echo "${_msg}"
+  echo_ifneed "${_msg}"
   return ${_ret}
 }
 
@@ -272,7 +272,7 @@ function ops_copy() {
         "${_suffix}" \
       )
       _ret=$?
-      echo "${_msg}"
+      echo_ifneed "${_msg}"
     fi
   fi
 
