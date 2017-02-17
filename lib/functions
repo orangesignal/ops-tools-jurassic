@@ -3,6 +3,8 @@
 # Default config file locations
 ssh_config="${ssh_config:-./ssh_config}"
 passlist="${passlist:-./passlist.tsv}"
+scp_args=
+rsync_args=
 
 function include() {
   local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
@@ -154,13 +156,13 @@ function ops_copy() {
   local self_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
 
   # copy src to work_dir
-  sshpass -p "${password}" rsync -ahv -e "ssh $(ssh_args)" ${src} "${username}"@"${hostname}":"${work_dir}" > /dev/null 2>&1
+  sshpass -p "${password}" rsync -ahv -e "ssh $(ssh_args)" ${rsync_args} ${src} "${username}"@"${hostname}":"${work_dir}" > /dev/null 2>&1
   ret=$?
   if [ $ret -ne 0 ]; then
     error "ERROR - copy failed."
   else
     # copy remote script
-    sshpass -p "${password}" scp $(ssh_args) ${self_dir}/remote/copy.bash "${username}"@"${hostname}":"${ops_file}" > /dev/null 2>&1
+    sshpass -p "${password}" scp $(ssh_args) ${scp_args} ${self_dir}/remote/copy.bash "${username}"@"${hostname}":"${ops_file}" > /dev/null 2>&1
     ret=$?
     if [ $ret -ne 0 ]; then
       error "ERROR - script failed."
@@ -220,7 +222,7 @@ function ops_fetch() {
   if [ $ret -ne 0 ]; then
     error "ERROR - Fetch failed."
   else
-    sshpass -p "${password}" scp $(ssh_args) -r "${username}"@"${hostname}":${work_path} "${dest}" > /dev/null 2>&1
+    sshpass -p "${password}" scp $(ssh_args) ${scp_args} -r "${username}"@"${hostname}":${work_path} "${dest}" > /dev/null 2>&1
     ret=$?
     if [ $ret -ne 0 ]; then
       error "ERROR - scp failed."
