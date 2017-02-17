@@ -48,17 +48,31 @@ chmod +x ops-tools-jurassic/ops
 ## passlist
 
 サーバー毎のユーザー名やパスワード、root 化コマンド、root 化パスワードなどを定義します。
-1サーバーで複数ユーザーを使い分けている場合は、passlist ファイルを複数作成して使い分けて下さい。
+1サーバーで複数ユーザーを使い分けている場合は、`passlist` ファイルを複数作成して使い分けて下さい。   
+
+```:passlist
+# hostname username password root_cmd root_password
+w01	devops	123456	sudo su -	
+w02	devops2	234567	su -	
+```
 
 # 使い方
 
-指定したホストへ SSH 接続 + root 化してコマンドを実行する例
+以下は指定したホストへ SSH 接続 + root 化してコマンドを実行する例です。
+
 ```
 ./ops cmd hostname 'ls -la'
+```
+
+passlist ファイルが指定されていない場合は、カレントディレクトリの passlist、passlist.tsv を順番に検索し一致するファイルがあればそれを使用します。   
+ssh_config ファイルが指定されていない場合は、ssh の仕様と同様です。   
 
 root 化する必要ない場合は、ssh アクションを使用します。
+
+```
 ./ops ssh hostname env
 ```
+
 
 指定したホストへ SSH 接続 + root 化してサービスコマンドを実行する例
 ```
