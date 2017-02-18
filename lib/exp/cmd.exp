@@ -20,7 +20,7 @@ set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set prompt {[#>$]}
+set prompt {[#>$] }
 set pw_prompt {[:]}
 
 set ssh_args      [lindex $argv 0]
@@ -29,11 +29,20 @@ set username      [lindex $argv 2]
 set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
-set cmd           [lindex $argv 6]
 
-for { set i 7 } { $i < [llength $argv] } { incr i } {
-  append cmd " [lindex $argv $i]"
+set _remote_file  [lindex $argv 6]
+set _cmd          [lindex $argv 7]
+for { set i 8 } { $i < [llength $argv] } { incr i } {
+  append _cmd " [lindex $argv $i]"
 }
+
+if { $_remote_file eq ""  } {
+  set cmd "$_cmd"
+} else {
+  set cmd "cat $_remote_file | $_cmd"
+}
+unset _remote_file
+unset _cmd
 
 if { $hostname eq "" } {
   abort "hostname must not be null\n"

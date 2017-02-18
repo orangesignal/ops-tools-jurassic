@@ -66,7 +66,12 @@ function passlist() {
 function ops_ssh() {
   passlist "${1}"
   shift
-  sshpass -p "${password}" ssh -n${ssh_args} ${username}@${hostname} "$@"
+
+  if [[ -p /dev/stdin ]]; then
+    cat - | sshpass -p "${password}" ssh ${ssh_args} ${username}@${hostname} "$@"
+  else
+    sshpass -p "${password}" ssh -n${ssh_args} ${username}@${hostname} "$@"
+  fi
 }
 
 # リモート環境へ ssh ログインして引数で指定されたディレクトリが存在しなければ作成します。
@@ -179,6 +184,12 @@ function ops_cmd() {
   passlist "${1}"
   shift
 
+  local _remote_file=
+  if [[ -p /dev/stdin ]]; then
+    _remote_file="$(get_remote_home_dir)/$(generate_work_dir_name)"
+    cat - | sshpass -p "${password}" ssh${ssh_args} ${username}@${hostname} "cat >${_remote_file}"
+  fi
+
   declare -r _msg=$(expect -f "$(self_dir)/exp/cmd.exp" -- \
     "${ssh_args}" \
     "${hostname}" \
@@ -186,10 +197,16 @@ function ops_cmd() {
     "${password}" \
     "${root_cmd}" \
     "${root_password}" \
+    "${_remote_file}" \
     "$@" \
   )
   declare -ri _ret=$?
   echo_ifneed "${_msg}"
+
+  if [[ "${_remote_file}" != '' ]]; then
+    sshpass -p "${password}" ssh -n${ssh_args} ${username}@${hostname} bash -c "\"if [[ -f ${_remote_file} ]]; then rm -f ${_remote_file}; fi\""
+  fi
+
   return ${_ret}
 }
 

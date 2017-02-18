@@ -20,7 +20,7 @@ set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set prompt {[#>$]}
+set prompt {[#>$] }
 set pw_prompt {[:]}
 
 set ssh_args      [lindex $argv 0]
