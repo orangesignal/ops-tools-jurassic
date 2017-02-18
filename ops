@@ -4,10 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-function self_dir() {
-  echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-}
-source "$(self_dir)/lib/functions"
+source "$(cd $(dirname $BASH_SOURCE) && pwd)/lib/functions"
 
 ###############################################################################
 # functions
