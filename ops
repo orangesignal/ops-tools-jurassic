@@ -28,6 +28,7 @@ cat <<END
 Common parameters:
   -F               ssh_config file
   -p               passlist file
+  -q               quiet mode
   -h, --help       display this help and exit
   -v, --version    output version information and exit
 END
@@ -139,6 +140,7 @@ END
 
 function parse_args() {
   ops_type=
+
   local _ops_args=()
   local _owner=
   local _mode=
@@ -174,7 +176,7 @@ function parse_args() {
         if [ ! -f "${2}" ]; then
           abort "$(myname): -F ${2} ssh_config file not found."
         fi
-        ssh_config="${2}"
+        ssh_args="${ssh_args} -F ${2}"
         shift 2
         ;;
       -p )
@@ -183,6 +185,10 @@ function parse_args() {
         fi
         passlist="${2}"
         shift 2
+        ;;
+      -q )
+        ssh_args="${ssh_args} -q"
+        shift
         ;;
       test | root | ssh | cmd | command | service | fetch | copy )
         ops_type="${1}"
