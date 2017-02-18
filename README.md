@@ -90,6 +90,28 @@ ssh_config ファイルが指定されていない場合は、ssh の仕様と�
 ./ops [ssh|cmd|service|fetch|copy] -h
 ```
 
+## 使い方2
+
+以下はローカル環境の bash スクリプトをリモート環境で実行させる場合の例です。
+```
+cat example.bash | ./ops ssh hostname bash
+# root で実行するには cmd アクションを使用して下さい。
+cat example.bash | ./ops cmd hostname bash
+```
+
+以下はローカル環境のファイルをリモート環境へ簡易コピーする例です。
+```
+cat example.txt | ./ops ssh hostname "cat >/var/tmp/example.txt"
+# root で実行するには cmd アクションを使用して下さい。
+cat example.txt | ./ops cmd hostname "cat >/var/tmp/example.txt"
+```
+
+尚、以下の制限があります。
+
+- 今のところ `ssh` と `cmd` アクションのみ対応
+- bash の while ループ中などから呼び出すと、標準入力が切り替わる問題の影響からループ処理が期待通りに動かないかもしれません。   
+(FYI - http://www.m-bsys.com/error/whileread-ssh)
+
 ## License
 
 * Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
