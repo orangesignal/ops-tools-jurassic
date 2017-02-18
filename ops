@@ -36,40 +36,24 @@ END
 
 function show_usage() {
 cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] [test|root|ssh|cmd|command|service|fetch|copy hostname args...] [-h|--help] [-v|--version]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-q] [ssh|cmd|command|service|fetch|copy hostname args...]
 指定された ops アクションを実行します。
 $(show_common_params)
 
 ops アクション名付きの -h または --help を指定することで各アクションの使い方を表示します。
 
-  $(myname) test --help
+  $(myname) ssh --help
+  $(myname) fetch --help
+  $(myname) copy --help
   $(myname) cmd --help
   $(myname) service --help
 
 END
 }
 
-function show_test_usage() {
-cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] test hostname
-指定されたホストへ SSH 接続して、環境確認用のコマンドを実行します。
-$(show_common_params)
-
-END
-}
-
-function show_root_usage() {
-cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] root hostname
-指定されたホストへ SSH 接続 + root 化して環境確認用のコマンドを実行します。
-$(show_common_params)
-
-END
-}
-
 function show_ssh_usage() {
 cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] ssh hostname [command]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-q] ssh hostname [command...]
 指定されたホストへ SSH 接続して、指定されたコマンドを実行します。
 $(show_common_params)
 
@@ -81,7 +65,7 @@ END
 
 function show_cmd_usage() {
 cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] cmd|command hostname [command]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-q] cmd|command hostname [command...]
 指定されたホストへ SSH 接続 + root 化して指定されたコマンドを実行します。
 $(show_common_params)
 
@@ -93,7 +77,7 @@ END
 
 function show_service_usage() {
 cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] service hostname service_name [command]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-q] service hostname service_name [command]
 指定されたホストへ SSH 接続 + root 化して指定されたサービスへコマンドを実行します。
 $(show_common_params)
 
@@ -105,7 +89,7 @@ END
 
 function show_fetch_usage() {
 cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] fetch hostname src dest
+Usage: $(myname) [-F ssh_config] [-p passlist] [-q] fetch hostname src dest
 指定されたホストへ SSH 接続 + root 化してリモートの src からローカルの dest へ複数のファイルまたはディレクトリを取得します。
 $(show_common_params)
 
@@ -117,7 +101,7 @@ END
 
 function show_copy_usage() {
 cat <<END
-Usage: $(myname) [-F ssh_config] [-p passlist] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-q] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
 指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
 
 Parameters:
@@ -161,8 +145,6 @@ function parse_args() {
 
       -h | --help )
         case "${ops_type}" in
-          test )			show_test_usage;;
-          root )			show_root_usage;;
           ssh )				show_ssh_usage;;
           cmd | command )	show_cmd_usage;;
           service )			show_service_usage;;
@@ -190,7 +172,7 @@ function parse_args() {
         ssh_args="${ssh_args} -q"
         shift
         ;;
-      test | root | ssh | cmd | command | service | fetch | copy )
+      ssh | cmd | command | service | fetch | copy )
         ops_type="${1}"
         shift
         ;;
@@ -299,12 +281,6 @@ fi
 parse_args "$@"
 
 case "${ops_type}" in
-  test )
-    ops_ssh "${ops_args[0]}" 'uname -n && whoami'
-    ;;
-  root )
-    ops_cmd "${ops_args[0]}" 'uname -n && whoami'
-    ;;
   ssh )
     if [[ -p /dev/stdin ]]; then
       ops_args+=("$(cat -)")

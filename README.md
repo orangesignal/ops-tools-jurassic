@@ -87,7 +87,7 @@ ssh_config ファイルが指定されていない場合は、ssh の仕様と�
 コマンド全般の使い方はヘルプオプションで確認して下さい。
 ```
 ./ops -h
-./ops [test|ssh|cmd|service|fetch|copy] -h
+./ops [ssh|cmd|service|fetch|copy] -h
 ```
 
 ## License
