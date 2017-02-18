@@ -292,10 +292,6 @@ fi
 
 parse_args "$@"
 
-if [ -p /dev/stdin ]; then
-  ops_args+=("$(cat -)")
-fi
-
 case "${ops_type}" in
   test )
     ops_ssh "${ops_args[0]}" 'uname -n && whoami'
@@ -304,6 +300,9 @@ case "${ops_type}" in
     ops_cmd "${ops_args[0]}" 'uname -n && whoami'
     ;;
   ssh )
+    if [ -p /dev/stdin ]; then
+      ops_args+=("$(cat -)")
+    fi
     ops_ssh "${ops_args[@]}"
     ;;
   cmd | command )
