@@ -147,7 +147,7 @@ function parse_args() {
   local _backup=
   local _suffix=
 
-  while [ $# -ne 0 ]; do
+  while [[ $# > 0 ]]; do
     case "${1}" in
       -- )
         shift
@@ -173,14 +173,14 @@ function parse_args() {
         exit 0
         ;;
       -F )
-        if [ ! -f "${2}" ]; then
+        if [[ ! -f "${2}" ]]; then
           abort "$(myname): -F ${2} ssh_config file not found."
         fi
         ssh_args="${ssh_args} -F ${2}"
         shift 2
         ;;
       -p )
-        if [ ! -f "${2}" ]; then
+        if [[ ! -f "${2}" ]]; then
           abort "$(myname): -p ${2} passlist file not found."
         fi
         passlist="${2}"
@@ -195,28 +195,28 @@ function parse_args() {
         shift
         ;;
       -owner )
-        if [ "${2}" = '' ]; then
+        if [[ "${2}" = '' ]]; then
           abort "$(myname): -owner Illegal parameter."
         fi
         _owner="${2}"
         shift 2
         ;;
       -mode )
-        if [ "${2}" = '' ]; then
+        if [[ "${2}" = '' ]]; then
           abort "$(myname): -mode Illegal parameter."
         fi
         _mode="${2}"
         shift 2
         ;;
       -backup )
-        if [ "${2}" = '' ]; then
+        if [[ "${2}" = '' ]]; then
           abort "$(myname): -backup Illegal parameter."
         fi
         _backup="${2}"
         shift 2
         ;;
       -suffix )
-        if [ "${2}" = '' ]; then
+        if [[ "${2}" = '' ]]; then
           abort "$(myname): -suffix Illegal parameter."
         fi
         _suffix="${2}"
@@ -229,26 +229,26 @@ function parse_args() {
     esac
   done
 
-  while [ $# -ne 0 ]; do
+  while [[ $# > 0 ]]; do
     _ops_args+=("${1}")
     shift
   done
 
   # check mandatory parameters
-  if [ "${ops_type}" = '' ]; then
+  if [[ "${ops_type}" = '' ]]; then
     abort "$(myname): Unknown ops action."
   fi
-  if [ "${_ops_args[0]}" = '' ]; then
+  if [[ "${_ops_args[0]}" = '' ]]; then
     abort "$(myname): Unknown hostaname."
   fi
 
   # check dependency parameters
   case "${ops_type}" in
     fetch | copy )
-      if [ "${_ops_args[1]}" = '' ]; then
+      if [[ "${_ops_args[1]}" = '' ]]; then
         abort "$(myname): Unknown src"
       fi
-      if [ "${_ops_args[2]}" = '' ]; then
+      if [[ "${_ops_args[2]}" = '' ]]; then
         abort "$(myname): Unknown dest"
       fi
       ;;
@@ -258,7 +258,7 @@ function parse_args() {
 
   # copy args
   ops_args=()
-  if [ "${ops_type}" != 'copy' ]; then
+  if [[ "${ops_type}" != 'copy' ]]; then
     ops_args+=("${_ops_args[@]}")
   else
     ops_args+=("${_ops_args[0]}")	# hostname
@@ -281,7 +281,7 @@ function parse_args() {
     # others
     declare -ri _max=${#_ops_args[@]}
     declare -i  _index=3
-    while [ ${_index} -lt ${_max} ]; do
+    while [[ ${_index} < ${_max} ]]; do
       ops_args+=("${_ops_args[${_index}]}")
       _index=$((_index + 1))
     done
@@ -291,7 +291,7 @@ function parse_args() {
 ###############################################################################
 # procedure
 
-if [ $# -eq 0 ]; then
+if [[ $# == 0 ]]; then
   show_usage
   exit 0
 fi
@@ -306,7 +306,7 @@ case "${ops_type}" in
     ops_cmd "${ops_args[0]}" 'uname -n && whoami'
     ;;
   ssh )
-    if [ -p /dev/stdin ]; then
+    if [[ -p /dev/stdin ]]; then
       ops_args+=("$(cat -)")
     fi
     ops_ssh "${ops_args[@]}"

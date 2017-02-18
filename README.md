@@ -14,8 +14,14 @@
 - sshpass
 - expect
 
+Ubuntu
 ```
 apt-get install sshpass expect
+```
+
+MacOS X
+```
+brew install sshpass
 ```
 
 リモート環境には以下が必要です。

@@ -19,7 +19,7 @@ function abort() { echo -e "$@" 1>&2; exit 1; }
 function trace_run() { echo "+ $@"; "$@"; }
 
 function echo_ifneed() {
-  if [ "${1}" != '' ]; then
+  if [[ "${1}" != '' ]]; then
     echo "${1}"
   fi
 }

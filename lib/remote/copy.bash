@@ -9,11 +9,11 @@ mode="${4}"
 backup="${5}"
 suffix="${6:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
-if [ -e "${dest}" ]; then
-  if [ "${backup}" != '' ]; then
+if [[ -e "${dest}" ]]; then
+  if [[ "${backup}" != '' ]]; then
     backup_path="${backup}${suffix}"
 
-    while [ -e "${backup_path}" ]; do
+    while [[ -e "${backup_path}" ]]; do
       backup_path="${backup_path}${suffix}"
     done
 
@@ -26,11 +26,11 @@ fi
 rsync -avh ${src} "${dest}"
 
 # chown
-if [ "${owner}" != '' ]; then
+if [[ "${owner}" != '' ]]; then
   chown -R ${owner} "${dest}"
 fi
 
 # mode
-if [ "${mode}" != '' ]; then
+if [[ "${mode}" != '' ]]; then
   chmod -R ${mode} "${dest}"
 fi

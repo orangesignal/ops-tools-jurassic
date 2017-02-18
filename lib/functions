@@ -25,21 +25,21 @@ source "$(self_dir)/io"
 # 変数 root_password - passlist に一致した root 化パスワード
 #
 function passlist() {
-  if [ "${1}" = '' ]; then
+  if [[ "${1}" = '' ]]; then
     abort "hostname must not be null."
   fi
 
   local _passlist=
-  if [ "${passlist}" = '' ]; then
+  if [[ "${passlist}" = '' ]]; then
     # find passlist
-    if [ -f "$(pwd)/passlist" ]; then
+    if [[ -f "$(pwd)/passlist" ]]; then
       _passlist="$(pwd)/passlist"
-    elif [ -f "$(pwd)/passlist.tsv" ]; then
+    elif [[ -f "$(pwd)/passlist.tsv" ]]; then
       _passlist="$(pwd)/passlist.tsv"
     else
       abort "Pallist file not found."
     fi
-  elif [ ! -f "${passlist}" ]; then
+  elif [[ ! -f "${passlist}" ]]; then
     abort "${passlist} Pallist file not found."
   else
     _passlist="${passlist}"
@@ -48,7 +48,7 @@ function passlist() {
   hostname="${1}"
 
   declare -r _line=$(cat "${_passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}	")
-  if [ "${_line}" = '' ]; then
+  if [[ "${_line}" = '' ]]; then
     abort "Unknown hostname ${hostname}"
   fi
 
@@ -74,7 +74,7 @@ function ops_ssh() {
 # 引数1 - 作成するディレクトリ
 #
 function make_remote_dir() {
-  if [ "${1}" = '' ]; then
+  if [[ "${1}" = '' ]]; then
     abort "path must not be null."
   fi
   sshpass -p "${password}" ssh -n${ssh_args} ${username}@${hostname} bash -c "\"if [[ ! -d ${1} ]]; then mkdir -p ${1}; fi\""
@@ -86,7 +86,7 @@ function make_remote_dir() {
 # 引数1 - 削除するディレクトリ
 #
 function remove_remote_dir() {
-  if [ "${1}" = '' ]; then
+  if [[ "${1}" = '' ]]; then
     abort "path must not be null."
   fi
 
@@ -238,13 +238,13 @@ function ops_copy() {
   # copy src to work_dir
   sshpass -p "${password}" rsync -ahv -e "ssh${ssh_args}" ${rsync_args} ${_src} "${username}"@"${hostname}":"${_work_dir}" > /dev/null 2>&1
   _ret=$?
-  if [ ${_ret} -ne 0 ]; then
+  if [[ ${_ret} != 0 ]]; then
     error "ERROR - copy failed."
   else
     # copy remote script
     sshpass -p "${password}" scp${ssh_args} ${scp_args} "$(self_dir)/remote/copy.bash" "${username}"@"${hostname}":"${_ops_file}" > /dev/null 2>&1
     _ret=$?
-    if [ ${_ret} -ne 0 ]; then
+    if [[ ${_ret} != 0 ]]; then
       error "ERROR - script failed."
     else
       # copy work_path to dest (+ chown + chmod)
@@ -301,12 +301,12 @@ function ops_fetch() {
     "${_work_dir}"
   _ret=$?
 
-  if [ ${_ret} -ne 0 ]; then
+  if [[ ${_ret} != 0 ]]; then
     error "ERROR - Fetch failed."
   else
     sshpass -p "${password}" scp${ssh_args} ${scp_args} -r "${username}"@"${hostname}":${_work_path} "${_dest}" > /dev/null 2>&1
     _ret=$?
-    if [ ${_ret} -ne 0 ]; then
+    if [[ ${_ret} != 0 ]]; then
       error "ERROR - scp failed."
     fi
   fi
