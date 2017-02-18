@@ -1,7 +1,8 @@
 #!/usr/bin/expect -f
+log_user 0
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- ¥'ssh_args¥' hostname username \'password\' root_cmd \'root_password\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' \[command...\]"
   exit 0
 }
 
@@ -45,24 +46,28 @@ if { $root_cmd eq "" } {
 ###############################################################################
 
 # ssh login + switch to root
-log_user 0
 set timeout 10
-eval spawn ssh ${ssh_args} -t $username@$hostname $root_cmd
+eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
 
 ###############################################################################
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
-  password: 
+  password: {
+    stty -echo
+    send -- "$password\r"
+    stty echo
+  }
 }
-send -- "$password\r"
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
   -re $prompt {
   }
   : {
+    stty -echo
     send -- "$root_password\r"
+    stty echo
     expect {
       timeout { abort "Failed to Switch Root.\n" }
       -re $prompt
