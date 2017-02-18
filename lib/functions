@@ -64,11 +64,11 @@ function passlist() {
 }
 
 function ssh_args() {
-  local _ssh_config_arg=
+  local _ssh_args="-q"
   if [ "${ssh_config}" != '' ]; then
-    _ssh_config_arg=" -F ${ssh_config}"
+    _ssh_args="${_ssh_args} -F ${ssh_config}"
   fi
-  echo "-q${_ssh_config_arg}"
+  echo "${_ssh_args}"
 }
 
 function ops_ssh() {

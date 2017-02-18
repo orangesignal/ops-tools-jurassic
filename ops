@@ -7,6 +7,9 @@ function self_dir() {
 }
 source "$(self_dir)/lib/functions"
 
+###############################################################################
+# functions
+
 function myname() {
   echo "$(basename $BASH_SOURCE)"
 }
@@ -278,6 +281,14 @@ function parse_args() {
     done
   fi
 }
+
+###############################################################################
+# procedure
+
+if [ $# -eq 0 ]; then
+  show_usage
+  exit 0
+fi
 
 parse_args "$@"
 
