@@ -17,6 +17,8 @@ proc abort { msg } {
 
 set env(TERM) vt100
 set env(LANG) C
+set env(SHELL) /bin/sh
+set env(HOME) /usr/local/bin
 
 set prompt {[#>$]}
 set pw_prompt {[:]}
