@@ -52,7 +52,7 @@ set cmd "rsync -avh $src $dest && chown -R $username $dest && chmod -R +rw $dest
 # ssh login + switch to root
 log_user 0
 set timeout 10
-eval spawn ssh ${ssh_args} -t $username@$hostname $root_cmd
+eval spawn ssh $ssh_args -t $username@$hostname $root_cmd
 
 ###############################################################################
 
@@ -64,12 +64,15 @@ expect {
 send -- "$password\r"
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
-  : 
-}
-send -- "$root_password\r"
-expect {
-  timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt
+  -re $prompt {
+  }
+  : {
+    send -- "$root_password\r"
+    expect {
+      timeout { abort "Failed to Switch Root.\n" }
+      -re $prompt
+    }
+  }
 }
 
 set timeout -1

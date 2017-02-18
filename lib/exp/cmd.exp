@@ -59,12 +59,15 @@ expect {
 send -- "$password\r"
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
-  : 
-}
-send -- "$root_password\r"
-expect {
-  timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt
+  -re $prompt {
+  }
+  : {
+    send -- "$root_password\r"
+    expect {
+      timeout { abort "Failed to Switch Root.\n" }
+      -re $prompt
+    }
+  }
 }
 
 set timeout -1
