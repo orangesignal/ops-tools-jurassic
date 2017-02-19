@@ -28,6 +28,7 @@ cat <<END
 Common parameters:
   -F               ssh_config file
   -p               passlist file
+  -l               limits the used bandwidth
   -q               quiet mode
   -h, --help       display this help and exit
   -v, --version    output version information and exit
@@ -124,6 +125,9 @@ END
 
 function parse_args() {
   ops_type=
+  ssh_args=
+  scp_args=
+  rsync_args=
 
   local _ops_args=()
   local _owner=
@@ -171,6 +175,16 @@ function parse_args() {
       -q )
         ssh_args="${ssh_args} -q"
         shift
+        ;;
+      -l )
+        if [[ "${2}" = '' ]]; then
+          abort "$(myname): -l Illegal parameter."
+        fi
+        # Kbit/sec
+        scp_args="${scp_args} -l ${2}"
+        # kB/sec
+        rsync_args="${rsync_args} --bwlimit=${2}"
+        shift 2
         ;;
       ssh | cmd | command | service | fetch | copy )
         ops_type="${1}"

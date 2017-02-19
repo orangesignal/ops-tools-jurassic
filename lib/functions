@@ -7,9 +7,9 @@ set -o pipefail
 
 # Default config file locations
 passlist="${passlist:-}"
-ssh_args="${ssh_args:-}"
-scp_args="${scp_args:-}"
-rsync_args="${rsync_args:-}"
+ssh_args=
+scp_args=
+rsync_args=
 
 function self_dir() {
   echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
@@ -232,17 +232,16 @@ function ops_copy() {
 
 function ops_fetch() {
   _init_ssh_params "${1}"
+  shift
 
-  declare -r _src=${2:?}
-  declare -r _dest="${3:?}"
-
+  declare -r _src=${1:?}
+  declare -r _dest="${2:?}"
   declare -r _remote_dir="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
   declare -r _remote_src="${_remote_dir}/$(basename ${_src})"
 
   _ops_mkdir "${_remote_dir}"
   _ops_expect 'noecho' "$(self_dir)/exp/fetch.exp" ${_src} "${_remote_dir}"
   declare -i _ret=$?
-
   if [[ ${_ret} == 0 ]]; then
     _ops_scp "${username}"@"${hostname}":${_remote_src} "${_dest}"
     _ret=$?
