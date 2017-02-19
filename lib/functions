@@ -18,38 +18,25 @@ function self_dir() {
 source "$(self_dir)/system"
 source "$(self_dir)/io"
 
-#
-# 引数で指定されたホスト名と一致する情報を passlist をから読込んで変数として設定します。
-#
-# 引数1 - ホスト名
-#
-# 変数 hostname - passlist に一致したホスト名
-# 変数 username - passlist に一致したユーザー名
-# 変数 password - passlist に一致したパスワード
-# 変数 root_cmd - passlist に一致した root 化コマンド
-# 変数 root_password - passlist に一致した root 化パスワード
-#
-function _read_ops_passlist() {
+function _find_passlist() {
+  local _passlist=
+  if [[ -f "${passlist}" ]]; then
+    _passlist="${passlist}"
+  elif [[ -f "$(pwd)/passlist" ]]; then
+    _passlist="$(pwd)/passlist"
+  else
+    abort "Pallist file not found. [${passlist}]"
+  fi
+  echo "${_passlist}"
+}
+
+function _init_ssh_params() {
   if [[ "${1}" = '' ]]; then
     abort "hostname must not be null."
   fi
 
-  local _passlist=
-  if [[ "${passlist}" = '' ]]; then
-    # find passlist
-    if [[ -f "$(pwd)/passlist" ]]; then
-      _passlist="$(pwd)/passlist"
-    else
-      abort "Pallist file not found."
-    fi
-  elif [[ ! -f "${passlist}" ]]; then
-    abort "${passlist} Pallist file not found."
-  else
-    _passlist="${passlist}"
-  fi
-
   hostname="${1}"
-
+  declare -r _passlist=$(_find_passlist)
   local _line=$(cat "${_passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}	")
   if [[ "${_line}" = '' ]]; then
     _line=$(cat "${_passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^\*	")
@@ -99,7 +86,7 @@ function _ops_rsync() {
 }
 
 function ops_ssh() {
-  _read_ops_passlist "${1}"
+  _init_ssh_params "${1}"
   shift
   if [[ -p /dev/stdin ]]; then
     _ops_ssh_stdin "$@"
@@ -166,7 +153,7 @@ function _ops_expect() {
 }
 
 function ops_cmd() {
-  _read_ops_passlist "${1}"
+  _init_ssh_params "${1}"
   shift
 
   local _remote_file=
@@ -186,14 +173,14 @@ function ops_cmd() {
 }
 
 function ops_service() {
-  _read_ops_passlist "${1}"
+  _init_ssh_params "${1}"
   shift
   _ops_expect 'echo' "$(self_dir)/exp/service.exp" "$@"
   return $?
 }
 
 function ops_copy() {
-  _read_ops_passlist "${1}"
+  _init_ssh_params "${1}"
   shift
 
   declare -r _glob_ignore_save=${GLOBIGNORE:-}
@@ -244,7 +231,7 @@ function ops_copy() {
 }
 
 function ops_fetch() {
-  _read_ops_passlist "${1}"
+  _init_ssh_params "${1}"
 
   declare -r _src=${2:?}
   declare -r _dest="${3:?}"
