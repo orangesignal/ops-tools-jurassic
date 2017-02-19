@@ -109,6 +109,8 @@ w02	devops2	234567	su -
 
 # バックアップを作成してコピー
 # backup に yes を指定するとコピー先と同じ場所にバックアップが作成されます
+# システム系ディレクトリへのコピー時に backup yes とすると、
+# ディレクトリ毎バックアップ移動されてシステムが壊れるなど大変危険な事態となるのでご注意下さい。
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -backup yes
 # デフォルトのサフィックスである ~ をやめて別のものを指定する場合
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -backup yes -suffix ".$(date +%Y%m%d%H%M)"
