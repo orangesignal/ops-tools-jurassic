@@ -18,9 +18,9 @@ while read line; do
   ../ops copy -F ./ssh_config -q -l 1024 "${line}" "${src}" "${dest}" -backup yes > /dev/null 2>&1
   ret=$?
   ../ops cmd -F ./ssh_config -q "${line}" "find ${dest} && rm -rf ${dest}"
-  rm -rf "${src}"
 done <<'END'
 w01
 END
 
+rm -rf "${src}"
 popd > /dev/null 2>&1
