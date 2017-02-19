@@ -3,7 +3,7 @@
 pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
 
 while read line; do
-  result=$(../ops ssh -F ./ssh_config -q "${line}" 'uname -n')
+  result=$(../ops cmd -F ./ssh_config -q "${line}" 'uname -n')
   ret=$?
   if [[ $ret  != 0 ]]; then
     error "ERROR - ${line}"
