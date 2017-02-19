@@ -15,7 +15,7 @@ touch "${src}/baz/baz.txt"
 touch "${src}/baz/baz.html"
 
 while read line; do
-  ../ops copy -F ./ssh_config -q -l 1024 "${line}" "${src}" "${dest}" -backup yes > /dev/null 2>&1
+  ../ops copy -F ./ssh_config -q -l 1024 "${line}" "${src}" "${dest}" -backup yes
   ret=$?
   ../ops cmd -F ./ssh_config -q "${line}" "find ${dest} && rm -rf ${dest}"
 done <<'END'

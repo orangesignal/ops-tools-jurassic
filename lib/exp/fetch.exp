@@ -48,7 +48,7 @@ if { $dest eq "" } {
   abort "dest must not be null\n"
 }
 
-set cmd "rsync -avh $src $dest && chown -R $username $dest && chmod -R +rw $dest"
+set cmd "rsync -a -q $src $dest && chown -R $username $dest && chmod -R +rw $dest"
 
 ###############################################################################
 

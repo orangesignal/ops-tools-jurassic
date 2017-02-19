@@ -18,12 +18,12 @@ if [[ -e "${dest}" ]]; then
     done
 
     # backup
-    rsync -avh "${dest}" "${backup_path}"
+    rsync -a -q "${dest}" "${backup_path}"
   fi
 fi
 
 # copy
-rsync -avh ${src} "${dest}"
+rsync -a -q ${src} "${dest}"
 
 # chown
 if [[ "${owner}" != '' ]]; then
