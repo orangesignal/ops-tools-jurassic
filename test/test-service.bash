@@ -1,6 +1,7 @@
 #!/bin/bash -eu
 
 pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
+trap 'popd > /dev/null 2>&1' SIGINT EXIT
 
 while read line; do
   set -- ${line}
@@ -16,5 +17,3 @@ w01	jenkins	stop
 w01	jenkins	start
 w01	jenkins	restart
 END
-
-popd > /dev/null 2>&1

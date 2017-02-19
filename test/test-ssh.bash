@@ -1,6 +1,7 @@
 #!/bin/bash -eu
 
 pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
+trap 'popd > /dev/null 2>&1' SIGINT EXIT
 
 while read line; do
   result=$(../ops ssh -F ./ssh_config -q "${line}" 'uname -n')
@@ -15,5 +16,3 @@ while read line; do
 done <<'END'
 w01
 END
-
-popd > /dev/null 2>&1
