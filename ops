@@ -28,7 +28,7 @@ cat <<END
 Common parameters:
   -F               ssh_config file
   -p               passlist file
-  -l               limits the used bandwidth
+  -l               limits the used bandwidth (kB/sec)
   -q               quiet mode
   -h, --help       display this help and exit
   -v, --version    output version information and exit
@@ -181,7 +181,7 @@ function parse_args() {
           abort "$(myname): -l Illegal parameter."
         fi
         # Kbit/sec
-        scp_args="${scp_args} -l ${2}"
+        scp_args="${scp_args} -l $((${2} * 8))"
         # kB/sec
         rsync_args="${rsync_args} --bwlimit=${2}"
         shift 2
