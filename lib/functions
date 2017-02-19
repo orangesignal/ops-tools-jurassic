@@ -214,7 +214,7 @@ function ops_copy() {
       error "ERROR - script failed."
     else
       # copy work_path to dest (+ chown + chmod)
-      _ops_expect 'noecho' "$(self_dir)/exp/copy.exp" "${_remote_file}" ${_remote_src} "$@"
+      _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" ${_remote_src} "$@"
       _ret=$?
     fi
   fi

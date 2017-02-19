@@ -96,11 +96,8 @@ w02	devops2	234567	su -
 # または
 ./ops copy w01 /var/tmp/foobar/ /root/foobar/
 
-# ワイルドカード使用 (本プロダクトは bash ベースなので、* を \ でエスケープするか ' で囲んで下さい)
-# (まだうまく動作しないので将来的に)
-#./ops copy w01 /var/tmp/\*.txt /root/foobar
-# (まだうまく動作しないので将来的に)
-#./ops copy w01 '/var/tmp/*.txt' /root/foobar
+# ワイルドカード使用 (まだうまく動作しないので将来的に)
+#./ops copy w01 /var/tmp/*.txt /root/foobar
 
 # ファイルコピー
 ./ops copy w01 /var/tmp/foobar.txt /root
