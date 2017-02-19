@@ -5,6 +5,8 @@ pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
 src="$(pwd)/test-copy-$(date +%Y%m%d%H%M%S)"
 dest="/var/tmp/foobar"
 
+trap 'rm -rf "${src}"; popd > /dev/null 2>&1' SIGINT EXIT
+
 mkdir -p "${src}"
 touch "${src}/foo.txt"
 touch "${src}/foo.html"
@@ -14,13 +16,10 @@ mkdir -p "${src}/baz"
 touch "${src}/baz/baz.txt"
 touch "${src}/baz/baz.html"
 
-while read line; do
-  ../ops copy -F ./ssh_config -q -l 1024 "${line}" "${src}" "${dest}" -backup yes
+while read hostname; do
+  ../ops copy -F ./ssh_config -q -l 1024 "${hostname}" "${src}" "${dest}" -backup yes
   ret=$?
-  ../ops cmd -F ./ssh_config -q "${line}" "find ${dest} && rm -rf ${dest}"
+  ../ops cmd -F ./ssh_config -q "${hostname}" "find ${dest} && rm -rf ${dest}"
 done <<'END'
 w01
 END
-
-rm -rf "${src}"
-popd > /dev/null 2>&1

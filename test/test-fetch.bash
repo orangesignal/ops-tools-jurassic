@@ -1,6 +1,7 @@
 #!/bin/bash -eu
 
 pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
+trap 'popd > /dev/null 2>&1' SIGINT EXIT
 
 while read line; do
   set -- ${line}
@@ -13,5 +14,3 @@ while read line; do
 done <<'END'
 w01 /var/spool/cron
 END
-
-popd > /dev/null 2>&1
