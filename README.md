@@ -106,6 +106,18 @@ w02	devops2	234567	su -
 ./ops copy w01 /var/tmp/foobar.txt /root
 # ファイルコピー (ファイル名指定)
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt
+
+# ファイルの所有者やアクセス権限を指定する場合
+./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -owner devops -mode +rw
+
+# バックアップを作成してコピー
+# backup に yes を指定するとコピー先と同じ場所にバックアップが作成されます
+./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -backup yes
+# デフォルトのサフィックスである ~ をやめて別のものを指定する場合
+./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -backup yes -suffix ".$(date +%Y%m%d%H%M)"
+# バックアップ先を指定する場合
+./ops copy w01 /var/tmp/foobar /root/baz -backup /root/backups -suffix ".$(date +%Y%m%d%H%M)"
+
 ```
 
 ### cmd (root でのコマンド実行)
