@@ -107,10 +107,7 @@ w02	devops2	234567	su -
 # ファイルの所有者やアクセス権限を指定する場合
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -owner devops -mode +rw
 
-# バックアップを作成してコピー
-# backup に yes を指定するとコピー先と同じ場所にバックアップが作成されます
-# システム系ディレクトリへのコピー時に backup yes とすると、
-# ディレクトリ毎バックアップ移動されてシステムが壊れるなど大変危険な事態となるのでご注意下さい。
+# 既存のディレクトリやファイルをバックアップ移動してからコピー
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -backup yes
 # デフォルトのサフィックスである ~ をやめて別のものを指定する場合
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt -backup yes -suffix ".$(date +%Y%m%d%H%M)"
@@ -118,6 +115,11 @@ w02	devops2	234567	su -
 ./ops copy w01 /var/tmp/foobar /root/baz -backup /root/backups -suffix ".$(date +%Y%m%d%H%M)"
 
 ```
+
+`copy` アクションのバックアップの概念はコピーではなく移動です。   
+`-backup` に `yes` を指定するとコピー先と同じ場所にバックアップが作成されます。   
+システム系ディレクトリへのコピー時に `-backup yes` とすると、
+ディレクトリ毎バックアップ移動されてシステムが壊れるなど大変危険な事態となるのでご注意下さい。
 
 ### cmd (root でのコマンド実行)
 
