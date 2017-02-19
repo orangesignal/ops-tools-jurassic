@@ -51,9 +51,11 @@ chmod +x ops-tools-jurassic/ops
 本プロジェクトに付属のサンプルをご覧下さい。   
 尚、`ssh_config` ファイルの書きっぷりについては、`ssh_config` の公式ページなどをご覧下さい。
 
+`ops` コマンドで、`ssh_config` ファイルが指定されていない場合の検索方法は ssh の仕様と同様です。   
+
 ### passlist
 
-サーバー毎のユーザー名やパスワード、root 化コマンド、root 化パスワードなどを定義します。
+サーバー毎のユーザー名やパスワード、`root` 化コマンド、`root` 化パスワードなどを定義します。
 1サーバーで複数ユーザーを使い分けている場合は、`passlist` ファイルを複数作成して使い分けて下さい。   
 
 ```:passlist
@@ -62,6 +64,9 @@ w01	devops	123456	sudo su -
 w02	devops2	234567	su -	
 *	devops	123456	sudo su -	
 ```
+
+`ops` コマンドで、`passlist` ファイルが指定されていない場合は、
+カレントディレクトリの `passlist` が検索され使用されます。
 
 ## 使い方
 
@@ -103,27 +108,35 @@ w02	devops2	234567	su -
 ./ops copy w01 /var/tmp/foobar.txt /root/baz.txt
 ```
 
-### cmd
-
-以下は、指定したホストへ SSH 接続 + root 化してコマンドを実行する例です。
+### cmd (root でのコマンド実行)
 
 ```
+# root のホームディレクトリのファイル一覧を取得する例
 ./ops cmd hostname ls -la
+# Jenkins を停止させる例
+./ops cmd hostname service jenkins stop
+```
 
-root 化する必要ない場合は、ssh アクションを使用します。
+### service (service の落とし上げ)
+
+`cmd` でもサービスの落とし上げは可能です。   
+`service` では、サービスの落とし上げ後にサービス名に一致するプロセス数を返します。
+
+```
+./ops service hostname jenkins stop
+0
+```
+
+### ssh (一般ユーザでのコマンド実行)
+
+root 化する必要ない操作は通常の ssh や scp で十分ですが、
+ops を使用すると(良いか悪いかは別として)パスワードを覚えておく手間を減らせます。
+
+```
 ./ops ssh hostname env
 ```
 
-passlist ファイルが指定されていない場合は、カレントディレクトリの `passlist` を順番に検索し一致するファイルを使用します。   
-ssh_config ファイルが指定されていない場合は、ssh の仕様と同様です。   
-
-以下は、指定したホストへ SSH 接続 + root 化してサービスコマンドを実行する例です。
-```
-./ops cmd hostname service jenkins stop
-
-プロセス確認したい場合は service アクションを使用します。
-./ops service hostname jenkins stop
-```
+### その他
 
 コマンド全般の使い方はヘルプオプションで確認して下さい。
 ```
