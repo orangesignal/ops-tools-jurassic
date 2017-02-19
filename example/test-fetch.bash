@@ -9,6 +9,7 @@ while read line; do
   ../ops fetch -F ./ssh_config -q -l 1024 "$@" "${dest}"
   ret=$?
   find "${dest}"
+  rm -rf "${dest}"
 done <<'END'
 w01 /var/spool/cron
 END
