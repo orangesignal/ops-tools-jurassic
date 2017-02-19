@@ -60,9 +60,48 @@ chmod +x ops-tools-jurassic/ops
 # hostname username password root_cmd root_password
 w01	devops	123456	sudo su -	
 w02	devops2	234567	su -	
+*	devops	123456	sudo su -	
 ```
 
 ## 使い方
+
+### fetch (リモートからローカルへのコピー)
+
+```
+# fetch は root で実行されます。
+# ディレクトリコピー
+./ops fetch w01 /root/foobar /var/tmp/foobar
+
+# ワイルドカード使用
+./ops fetch w01 /root/foobar/*.txt /var/tmp
+
+# ファイルコピー
+./ops fetch w01 /root/foobar.txt /var/tmp
+
+# ファイルコピー (ファイル名指定)
+./ops fetch w01 /root/foobar.txt /var/tmp/baz.txt
+```
+
+### copy (ローカルからリモートへのコピー)
+
+```
+# copy は root で実行されます。
+# ディレクトリコピー
+./ops copy w01 /var/tmp /root/foobar
+# または
+./ops copy w01 /var/tmp/foobar/ /root/foobar/
+
+# ワイルドカード使 (本プロダクトは bash ベースなので、* を \ でエスケープするか ' で囲んで下さい)
+./ops copy w01 /var/tmp/\*.txt /root/foobar
+./ops copy w01 '/var/tmp/*.txt' /root/foobar
+
+# ファイルコピー
+./ops copy w01 /var/tmp/foobar.txt /root
+# ファイルコピー (ファイル名指定)
+./ops copy w01 /var/tmp/foobar.txt /root/baz.txt
+```
+
+### cmd
 
 以下は、指定したホストへ SSH 接続 + root 化してコマンドを実行する例です。
 
@@ -73,7 +112,7 @@ root 化する必要ない場合は、ssh アクションを使用します。
 ./ops ssh hostname env
 ```
 
-passlist ファイルが指定されていない場合は、カレントディレクトリの passlist、passlist.tsv を順番に検索し一致するファイルを使用します。   
+passlist ファイルが指定されていない場合は、カレントディレクトリの `passlist` を順番に検索し一致するファイルを使用します。   
 ssh_config ファイルが指定されていない場合は、ssh の仕様と同様です。   
 
 以下は、指定したホストへ SSH 接続 + root 化してサービスコマンドを実行する例です。
