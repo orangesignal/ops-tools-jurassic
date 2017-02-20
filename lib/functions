@@ -191,7 +191,6 @@ function ops_copy() {
   declare -r _remote_dir="$(_ops_remote_home_dir)/${_work_name}"
   declare -r _remote_child_dir="${_remote_dir}/${_work_name}"
   declare -r _remote_file="${_remote_dir}/script"
-  declare -r _remote_src="${_remote_child_dir}/$(basename ${_src})"
   declare -i _ret=0
 
   _ops_mkdir "${_remote_child_dir}"
@@ -201,6 +200,7 @@ function ops_copy() {
   if [[ ${_ret} != 0 ]]; then
     error "ERROR - copy failed."
   else
+    declare -r _remote_src="${_remote_child_dir}/$(basename ${_src})"
     # copy remote script
     _ops_scp "$(self_dir)/remote/copy.bash" "${username}"@"${hostname}":"${_remote_file}"
     _ret=$?
