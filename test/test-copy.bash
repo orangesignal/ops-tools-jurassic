@@ -1,42 +1,108 @@
 #!/bin/bash -euf
 
-pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
+function setup() {
+  pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
+  src_dir="$(pwd)/test-copy-$(date +%Y%m%d%H%M%S)"
+  dest_dir="/var/tmp/foobar"
+  trap 'onExit' SIGINT EXIT
 
-base="test-copy-$(date +%Y%m%d%H%M%S)"
-src_dir="$(pwd)/${base}"
-dest_dir="/var/tmp/foobar"
+  mkdir "${src_dir}"
+  echo 'foo text' > "${src_dir}/foo.txt"
+  echo 'foo html' > "${src_dir}/foo.html"
+  echo 'bar text' > "${src_dir}/bar.txt"
+  echo 'bar html' > "${src_dir}/bar.html"
+  mkdir "${src_dir}/baz"
+  echo 'baz text' > "${src_dir}/baz/baz.txt"
+  echo 'baz html' > "${src_dir}/baz/baz.html"
+}
 
-trap 'rm -rf "${src_dir}"; popd > /dev/null 2>&1' SIGINT EXIT
+function onExit() {
+  rm -rf "${src_dir}"
+  popd > /dev/null 2>&1
+}
 
-mkdir "${src_dir}"
-touch "${src_dir}/foo.txt"
-touch "${src_dir}/foo.html"
-touch "${src_dir}/bar.txt"
-touch "${src_dir}/bar.html"
-mkdir "${src_dir}/baz"
-touch "${src_dir}/baz/baz.txt"
-touch "${src_dir}/baz/baz.html"
-
-while read line; do
-  case "${line}" in
-    \#* )
-      echo "skip: $line"
-      continue;
-      ;;
-    * )
-      echo "line: $line"
-      ;;
-  esac
-  set -- ${line}
-  ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
-  ../ops copy -F ./ssh_config -q -l 1024 "$@"
-  ../ops cmd -F ./ssh_config -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
-  echo ''
-done <<END
+function testCopy() {
+  while read line; do
+    case "${line}" in
+      \#* ) continue ;;
+      * )   echo "line: $line" ;;
+    esac
+    set -- ${line}
+    ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
+    ../ops copy -F ./ssh_config -q -l 1024 "$@"
+    ../ops cmd -F ./ssh_config -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    echo ''
+  done <<END
 w01 ${src_dir}/foo.txt ${dest_dir}
 w01 ${src_dir}/foo.txt ${dest_dir}/renamed-foo.txt
 w01 ${src_dir}         ${dest_dir}
 w01 ${src_dir}/        ${dest_dir}/
-#w01 ${src_dir}/*.txt   ${dest_dir}
+w01 ${src_dir}/*.txt   ${dest_dir}
 END
+}
 
+function testChangeOwnerAndChangeMode() {
+  while read line; do
+    case "${line}" in
+      \#* ) continue ;;
+      * )   echo "line: $line" ;;
+    esac
+    set -- ${line}
+    ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
+    ../ops copy -F ./ssh_config -q -l 1024 "$@"
+    ../ops cmd -F ./ssh_config -q "${1}" "ls -l ${dest_dir} && rm -rf ${dest_dir}"
+    echo ''
+  done <<END
+w01 ${src_dir}/foo.txt ${dest_dir} -owner root
+w01 ${src_dir}/foo.txt ${dest_dir} -owner root:root
+w01 ${src_dir}/foo.txt ${dest_dir} -mode +x
+w01 ${src_dir}/foo.txt ${dest_dir} -mode 666
+w01 ${src_dir}/foo.txt ${dest_dir} -owner root:root -mode 600
+w01 ${src_dir}         ${dest_dir} -owner root
+w01 ${src_dir}         ${dest_dir} -owner root:root
+w01 ${src_dir}         ${dest_dir} -mode +x
+w01 ${src_dir}         ${dest_dir} -mode 666
+w01 ${src_dir}         ${dest_dir} -owner root:root -mode 600
+END
+}
+
+# test backup
+function testBackup() {
+  while read line; do
+    case "${line}" in
+      \#* ) continue ;;
+      * )   echo "line: $line" ;;
+    esac
+    set -- ${line}
+    local flag="${1}"
+    shift
+    ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
+    case "${flag}" in
+      *\.txt )
+        # setup no-empty file
+        ../ops cmd -F ./ssh_config -q "${1}" "cp /var/log/syslog ${dest_dir}/${flag}"
+        ;;
+      2 )
+        ../ops copy -F ./ssh_config -q -l 1024 "$@"
+        ;;
+      * )
+        ;;
+    esac
+    ../ops copy -F ./ssh_config -q -l 1024 "$@"
+    ../ops cmd -F ./ssh_config -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    echo ''
+  done <<-END
+# file
+x       w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes
+foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes
+foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes -suffix "-$(date +%Y%m%d)"
+# directory
+x       w01 ${src_dir}/        ${dest_dir}/child/  -backup yes
+2       w01 ${src_dir}/        ${dest_dir}/child/  -backup yes
+END
+}
+
+setup
+#testCopy
+#testChangeOwnerAndChangeMode
+testBackup
