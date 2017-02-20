@@ -14,6 +14,10 @@ set password      [lindex $argv 2]
 set src           [lindex $argv 3]
 set dest          [lindex $argv 4]
 
+if { $password eq "" } {
+  set password "''"
+}
+
 ###############################################################################
 
 eval spawn -noecho sshpass -p $password rsync -a -e \"ssh $ssh_args\" $rsync_args $src $dest

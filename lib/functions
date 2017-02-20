@@ -80,7 +80,7 @@ function _ops_scp() {
 }
 
 function _ops_rsync() {
-  sshpass -p "${password}" rsync -a -e "ssh${ssh_args}"${rsync_args} ${1:?} ${2:?}
+  expect -f "$(self_dir)/exp/rsync.exp" -- "${ssh_args}" "${rsync_args}" "${password}" "${1:?}" "${2:?}"
   return $?
 }
 
@@ -220,6 +220,7 @@ function ops_copy() {
   else
     GLOBIGNORE=${_glob_ignore_save}
   fi
+
   return ${_ret}
 }
 
@@ -227,17 +228,20 @@ function ops_fetch() {
   _init_ssh_params "${1}"
   shift
 
-  declare -r _src=${1:?}
+  declare -r _glob_ignore_save=${GLOBIGNORE:-}
+  GLOBIGNORE=*
+
+  declare -r _src="${1:?}"
   declare -r _dest="${2:?}"
   declare -r _remote_dir="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
   declare -r _remote_src="${_remote_dir}/$(basename ${_src})"
   declare -i _ret=0
 
   _ops_mkdir "${_remote_dir}"
-  _ops_expect 'noecho' "$(self_dir)/exp/fetch.exp" ${_src} "${_remote_dir}"
+  _ops_expect 'noecho' "$(self_dir)/exp/fetch.exp" "${_src}" "${_remote_dir}"
   _ret=$?
   if [[ ${_ret} == 0 ]]; then
-    _ops_scp "${username}"@"${hostname}":${_remote_src} "${_dest}"
+    _ops_rsync "${username}"@"${hostname}":"${_remote_src}" "${_dest}"
     _ret=$?
     if [[ ${_ret} != 0 ]]; then
       error "ERROR - scp failed."
@@ -247,5 +251,10 @@ function ops_fetch() {
   fi
 
   _ops_rmdir "${_remote_dir}"
+  if [[ "${_glob_ignore_save}" = '' ]]; then
+    unset GLOBIGNORE
+  else
+    GLOBIGNORE=${_glob_ignore_save}
+  fi
   return ${_ret}
 }
