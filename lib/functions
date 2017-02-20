@@ -80,7 +80,8 @@ function _ops_scp() {
 }
 
 function _ops_rsync() {
-  expect -f "$(self_dir)/exp/rsync.exp" -- "${ssh_args}" "${rsync_args}" "${password}" "${1:?}" "${2:?}"
+  sshpass -p "${password}" rsync -a -e "ssh${ssh_args}"${rsync_args} ${1:?} ${2:?}
+#  expect -f "$(self_dir)/exp/rsync.exp" -- "${ssh_args}" "${rsync_args}" "${password}" "${1:?}" "${2:?}"
   return $?
 }
 
@@ -191,12 +192,18 @@ function ops_copy() {
   declare -i _ret=0
 
   _ops_mkdir "${_remote_child_dir}"
-  # copy remote script
+  # copy remote script file
   _ops_scp "$(self_dir)/remote/copy.bash" "${username}"@"${hostname}":"${_remote_file}"
   _ret=$?
-
   if [[ ${_ret} == 0 ]]; then
     # backup
+    if [[ "${4}" != '' ]]; then
+      _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doBackup" "dummy" "$@"
+      _ret=$?
+      if [[ ${_ret} != 0 ]]; then
+        break;
+      fi
+    fi
 
     # copy
     local _src=
@@ -210,7 +217,7 @@ function ops_copy() {
       fi
       # copy work_path to dest (+ chown + chmod)
       _remote_src="${_remote_child_dir}/$(basename ${_src})"
-      _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" ${_remote_src} "$@"
+      _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doCopy" ${_remote_src} "$@"
       _ret=$?
       if [[ ${_ret} != 0 ]]; then
         break;
