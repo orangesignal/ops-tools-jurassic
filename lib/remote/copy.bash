@@ -2,35 +2,38 @@
 
 set -e
 
-src=${1:?}
-dest="${2:?}"
-owner="${3}"
-mode="${4}"
-backup="${5}"
-suffix="${6:-${SIMPLE_BACKUP_SUFFIX:-~}}"
+declare -r act="${1:-'doCopy'}"
+declare -r src=${2:?}
+declare -r dest="${3:?}"
+declare -r owner="${4}"
+declare -r mode="${5}"
+declare -r backup="${6}"
+declare -r suffix="${7:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
-if [[ -e "${dest}" ]]; then
-  if [[ "${backup}" != '' ]]; then
-    backup_path="${backup}${suffix}"
-
-    while [[ -e "${backup_path}" ]]; do
-      backup_path="${backup_path}${suffix}"
-    done
-
-    # backup
-    rsync -a -q "${dest}" "${backup_path}"
+function doBackup() {
+  if [[ -e "${dest}" ]]; then
+    if [[ "${backup}" != '' ]]; then
+      local backup_path="${backup}${suffix}"
+      while [[ -e "${backup_path}" ]]; do
+        backup_path="${backup_path}${suffix}"
+      done
+      # backup
+      rsync -a -q "${dest}" "${backup_path}"
+    fi
   fi
-fi
+}
 
-# copy
-rsync -a -q ${src} "${dest}"
+function doCopy() {
+  # copy
+  rsync -a -q ${src} "${dest}"
+  # chown
+  if [[ "${owner}" != '' ]]; then
+    chown -R ${owner} "${dest}"
+  fi
+  # mode
+  if [[ "${mode}" != '' ]]; then
+    chmod -R ${mode} "${dest}"
+  fi
+}
 
-# chown
-if [[ "${owner}" != '' ]]; then
-  chown -R ${owner} "${dest}"
-fi
-
-# mode
-if [[ "${mode}" != '' ]]; then
-  chmod -R ${mode} "${dest}"
-fi
+eval "${act}"
