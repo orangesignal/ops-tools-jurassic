@@ -7,12 +7,8 @@ declare -r src=${2:?}
 declare -r dest="${3:?}"
 declare -r owner="${4}"
 declare -r mode="${5}"
-declare    backup="${6}"
+declare -r backup="${6}"
 declare -r suffix="${7:-${SIMPLE_BACKUP_SUFFIX:-~}}"
-
-function self_dir() {
-  echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
-}
 
 function basename() {
   echo "${1##*/}"
@@ -21,12 +17,10 @@ function basename() {
 function doBackup() {
   local _backup_src="${dest}"
   local _backup_dest=
-  local _backup_file=
 
   # file -> dir copy pattern [/foo/bar.txt /foo]
   if [[ -f "${src}" ]] && [[ -d "${_backup_src}" ]]; then
-    _backup_file=$(basename "${src}")
-    _backup_src="$(cd "${_backup_src}" && pwd)/${_backup_file}"
+    _backup_src="$(cd "${_backup_src}" && pwd)/$(basename "${src}")"
   fi
 
   # validate backup environment
