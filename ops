@@ -266,13 +266,13 @@ function parse_args() {
 
     case "${_backup}" in
       [yY]es | [tT]rue | YES | TRUE )
-        _backup="${_ops_args[2]}"
+        _backup="yes"
         ;;
       * )
         ;;
     esac
 
-    ops_args+=("$(echo ${_backup} | sed 's|/$||g')")
+    ops_args+=("${_backup}")
     ops_args+=("${_suffix}")
 
     # others

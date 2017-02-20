@@ -7,12 +7,16 @@ declare -r src=${2:?}
 declare -r dest="${3:?}"
 declare -r owner="${4}"
 declare -r mode="${5}"
-declare -r backup="${6}"
+declare    backup="${6}"
 declare -r suffix="${7:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
 function doBackup() {
   if [[ -e "${dest}" ]]; then
     if [[ "${backup}" != '' ]]; then
+      if [[ "${backup}" == 'yes' ]]; then
+        backup="${dest}"
+      fi
+      backup="$(echo ${backup} | sed 's|/$||g')"
       local backup_path="${backup}"
       while [[ -e "${backup_path}" ]]; do
         backup_path="${backup_path}${suffix}"
