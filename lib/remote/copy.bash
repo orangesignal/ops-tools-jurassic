@@ -10,20 +10,43 @@ declare -r mode="${5}"
 declare    backup="${6}"
 declare -r suffix="${7:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
+function self_dir() {
+  echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+}
+
+function basename() {
+  echo "${1##*/}"
+}
+
 function doBackup() {
-  if [[ -e "${dest}" ]]; then
-    if [[ "${backup}" != '' ]]; then
-      if [[ "${backup}" == 'yes' ]]; then
-        backup="${dest}"
-      fi
-      backup="$(echo ${backup} | sed 's|/$||g')"
-      local backup_path="${backup}"
-      while [[ -e "${backup_path}" ]]; do
-        backup_path="${backup_path}${suffix}"
-      done
-      # backup
-      rsync -a -q "${dest}" "${backup_path}"
+  local _backup_src="${dest}"
+  local _backup_dest=
+  local _backup_file=
+
+  # file -> dir copy pattern [/foo/bar.txt /foo]
+  if [[ -f "${src}" ]] && [[ -d "${_backup_src}" ]]; then
+    _backup_file=$(basename "${src}")
+    _backup_src="$(cd "${_backup_src}" && pwd)/${_backup_file}"
+  fi
+
+  # validate backup environment
+  if [[ -e "${_backup_src}" ]] && [[ "${backup}" != '' ]]; then
+    # set backup_dest
+    if [[ "${backup}" == 'yes' ]]; then
+      _backup_dest="${_backup_src}"
+    else
+      _backup_dest="${backup}"
     fi
+    # remove last slash
+    if [[ -d "${_backup_dest}" ]]; then
+      _backup_dest="$(cd "${_backup_dest}" && pwd)"
+    fi
+
+    while [[ -e "${_backup_dest}" ]]; do
+      _backup_dest="${_backup_dest}${suffix}"
+    done
+    # backup
+    rsync -a -q "${_backup_src}" "${_backup_dest}"
   fi
 }
 

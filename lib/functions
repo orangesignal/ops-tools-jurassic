@@ -199,7 +199,15 @@ function ops_copy() {
     local _src=
     local _remote_src=
     for _src in $(echo "${_srcs}"); do
+      # copy src to work_dir
+      _ops_rsync ${_src} "${username}"@"${hostname}":"${_remote_child_dir}"
+      _ret=$?
+      if [[ ${_ret} != 0 ]]; then
+        break;
+      fi
+
       _remote_src="${_remote_child_dir}/$(basename ${_src})"
+
       # backup
       if [[ "${4}" != '' ]]; then
         _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doBackup" "${_remote_src}" "$@"
@@ -209,12 +217,6 @@ function ops_copy() {
         fi
       fi
 
-      # copy src to work_dir
-      _ops_rsync ${_src} "${username}"@"${hostname}":"${_remote_child_dir}"
-      _ret=$?
-      if [[ ${_ret} != 0 ]]; then
-        break;
-      fi
       # copy work_path to dest (+ chown + chmod)
       _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doCopy" ${_remote_src} "$@"
       _ret=$?

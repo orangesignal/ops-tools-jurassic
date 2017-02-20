@@ -102,7 +102,7 @@ function testBackup() {
 # file
 x       w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes
 foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes
-#foo.txt w01 ${src_dir}/*.txt   ${dest_dir}         -backup yes
+foo.txt w01 ${src_dir}/*.txt   ${dest_dir}         -backup yes
 foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes                    -suffix "-$(date +%Y%m%d)"
 foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup ${dest_dir}/backup.txt -suffix "-$(date +%Y%m%d)"
 # directory
