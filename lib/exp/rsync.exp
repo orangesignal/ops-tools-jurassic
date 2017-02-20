@@ -1,73 +1,22 @@
 #!/usr/bin/expect -f
+log_user 1
+
+###############################################################################
 
 set env(TERM) vt100
 set env(LANG) C
+set env(SHELL) /bin/sh
+set env(HOME) /usr/local/bin
 
-proc abort { msg } {
-  send_error "$msg"
-  exit 1
-}
+set ssh_args      [lindex $argv 0]
+set rsync_args    [lindex $argv 1]
+set password      [lindex $argv 2]
+set src           [lindex $argv 3]
+set dest          [lindex $argv 4]
 
-set prompt {[#>$]}
-set pw_prompt {[:]}
+###############################################################################
 
-set ssh_config    [lindex $argv 0]
-set hostname      [lindex $argv 1]
-set username      [lindex $argv 2]
-set password      [lindex $argv 3]
-set root_cmd      [lindex $argv 4]
-set root_password [lindex $argv 5]
-set src           [lindex $argv 6]
-set dest          [lindex $argv 7]
-set owner         [lindex $argv 8]
-set mode          [lindex $argv 9]
-
-set cmd "rsync -avh $src $dest"
-if { $owner ne "" } {
-  append cmd " && chown -R $owner $dest"
-}
-if { $mode ne "" } {
-  append cmd " && chmod -R $mode $dest"
-}
-
-# ssh login + switch to root
-log_user 0
-set timeout 10
-spawn ssh -F ${ssh_config} -q -t $username@$hostname $root_cmd
-expect {
-  eof     { abort "SSH failure for remote host $hostname\n" }
-  timeout { abort "Failed to get password prompt\n" }
-  password: { send -- "$password\r" }
-}
-expect {
-  timeout { abort "Login failed. Password incorrect.\n" }
-  : { send -- "$root_password\r" }
-}
-expect {
-  timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt
-}
-
-# execute command
-set timeout -1
-send -- "$cmd\r"
-expect {
-  -re $prompt
-}
-
-# command status
-send -- "echo \$?\r"
-expect {
-  -re "\n(\[^\r]*)\r"
-}
-set action_status "$expect_out(1,string)"
-
-expect {
-  -re $prompt
-}
-
-# root exit
-send -- "exit\r"
+eval spawn -noecho sshpass -p $password rsync -a -e \"ssh $ssh_args\" $rsync_args $src $dest
 
 # terminate
 expect eof
@@ -78,7 +27,4 @@ if { $os_error == -1 } {
   exit 127
 }
 set status [lindex $result 3]
-if { $status == 0 } {
-  exit $action_status
-}
 exit $status
