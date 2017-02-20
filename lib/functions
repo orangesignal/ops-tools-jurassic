@@ -196,19 +196,19 @@ function ops_copy() {
   _ops_scp "$(self_dir)/remote/copy.bash" "${username}"@"${hostname}":"${_remote_file}"
   _ret=$?
   if [[ ${_ret} == 0 ]]; then
-    # backup
-    if [[ "${4}" != '' ]]; then
-      _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doBackup" "dummy" "$@"
-      _ret=$?
-      if [[ ${_ret} != 0 ]]; then
-        break;
-      fi
-    fi
-
-    # copy
     local _src=
     local _remote_src=
     for _src in $(echo "${_srcs}"); do
+      _remote_src="${_remote_child_dir}/$(basename ${_src})"
+      # backup
+      if [[ "${4}" != '' ]]; then
+        _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doBackup" "${_remote_src}" "$@"
+        _ret=$?
+        if [[ ${_ret} != 0 ]]; then
+          break;
+        fi
+      fi
+
       # copy src to work_dir
       _ops_rsync ${_src} "${username}"@"${hostname}":"${_remote_child_dir}"
       _ret=$?
@@ -216,7 +216,6 @@ function ops_copy() {
         break;
       fi
       # copy work_path to dest (+ chown + chmod)
-      _remote_src="${_remote_child_dir}/$(basename ${_src})"
       _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" "doCopy" ${_remote_src} "$@"
       _ret=$?
       if [[ ${_ret} != 0 ]]; then

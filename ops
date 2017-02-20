@@ -272,7 +272,7 @@ function parse_args() {
         ;;
     esac
 
-    ops_args+=("${_backup}")
+    ops_args+=("$(echo ${_backup} | sed 's|/$||g')")
     ops_args+=("${_suffix}")
 
     # others

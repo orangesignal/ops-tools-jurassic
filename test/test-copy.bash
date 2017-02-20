@@ -85,6 +85,13 @@ function testBackup() {
       2 )
         ../ops copy -F ./ssh_config -q -l 1024 "$@"
         ;;
+      3 )
+        ../ops copy -F ./ssh_config -q -l 1024 "$@"
+        ../ops copy -F ./ssh_config -q -l 1024 "$@"
+        ;;
+      bkdir )
+        ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${5}"
+        ;;
       * )
         ;;
     esac
@@ -95,14 +102,18 @@ function testBackup() {
 # file
 x       w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes
 foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes
-foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes -suffix "-$(date +%Y%m%d)"
+#foo.txt w01 ${src_dir}/*.txt   ${dest_dir}         -backup yes
+foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup yes                    -suffix "-$(date +%Y%m%d)"
+foo.txt w01 ${src_dir}/foo.txt ${dest_dir}/foo.txt -backup ${dest_dir}/backup.txt -suffix "-$(date +%Y%m%d)"
 # directory
 x       w01 ${src_dir}/        ${dest_dir}/child/  -backup yes
 2       w01 ${src_dir}/        ${dest_dir}/child/  -backup yes
+2       w01 ${src_dir}/        ${dest_dir}/child/  -backup ${dest_dir}/backup
+3       w01 ${src_dir}/        ${dest_dir}/child/  -backup ${dest_dir}/backup
 END
 }
 
 setup
-#testCopy
-#testChangeOwnerAndChangeMode
+testCopy
+testChangeOwnerAndChangeMode
 testBackup
