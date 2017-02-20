@@ -13,7 +13,7 @@ declare -r suffix="${7:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 function doBackup() {
   if [[ -e "${dest}" ]]; then
     if [[ "${backup}" != '' ]]; then
-      local backup_path="${backup}${suffix}"
+      local backup_path="${backup}"
       while [[ -e "${backup_path}" ]]; do
         backup_path="${backup_path}${suffix}"
       done
