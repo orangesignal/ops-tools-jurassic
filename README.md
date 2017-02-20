@@ -96,8 +96,8 @@ w02	devops2	234567	su -
 # または
 ./ops copy w01 /var/tmp/foobar/ /root/foobar/
 
-# ワイルドカード使用 (まだうまく動作しないので将来的に)
-#./ops copy w01 /var/tmp/*.txt /root/foobar
+# ワイルドカード使用
+./ops copy w01 /var/tmp/*.txt /root/foobar
 
 # ファイルコピー
 ./ops copy w01 /var/tmp/foobar.txt /root
@@ -116,7 +116,6 @@ w02	devops2	234567	su -
 
 ```
 
-`copy` アクションのバックアップの概念はコピーではなく移動です。   
 `-backup` に `yes` を指定するとコピー先と同じ場所にバックアップが作成されます。   
 システム系ディレクトリへのコピー時に `-backup yes` とすると、
 ディレクトリ毎バックアップ移動されてシステムが壊れるなど大変危険な事態となるのでご注意下さい。
