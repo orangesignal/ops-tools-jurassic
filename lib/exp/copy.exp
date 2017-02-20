@@ -2,7 +2,7 @@
 log_user 0
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' ops_file src dest \[\'owner\' \'mode\' \'backup\' \'suffix\'\]"
+  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' remote_file src dest \[\'owner\' \'mode\' \'backup\' \'suffix\'\]"
   exit 0
 }
 
@@ -29,13 +29,14 @@ set username      [lindex $argv 2]
 set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
-set ops_file      [lindex $argv 6]
-set src           [lindex $argv 7]
-set dest          [lindex $argv 8]
-set owner         [lindex $argv 9]
-set mode          [lindex $argv 10]
-set backup        [lindex $argv 11]
-set suffix        [lindex $argv 12]
+set remote_file   [lindex $argv 6]
+set act           [lindex $argv 7]
+set src           [lindex $argv 8]
+set dest          [lindex $argv 9]
+set owner         [lindex $argv 10]
+set mode          [lindex $argv 11]
+set backup        [lindex $argv 12]
+set suffix        [lindex $argv 13]
 
 if { $hostname eq "" } {
   abort "hostname must not be null\n"
@@ -46,8 +47,11 @@ if { $username eq "" } {
 if { $root_cmd eq "" } {
   abort "root_cmd must not be null\n"
 }
-if { $ops_file eq "" } {
-  abort "ops_file must not be null\n"
+if { $remote_file eq "" } {
+  abort "remote_file must not be null\n"
+}
+if { $act eq "" } {
+  set act "''"
 }
 if { $src eq "" } {
   abort "src must not be null\n"
@@ -56,7 +60,7 @@ if { $dest eq "" } {
   abort "dest must not be null\n"
 }
 
-set cmd "bash $ops_file $src $dest"
+set cmd "bash $remote_file $act $src $dest"
 
 if { $owner ne "" } {
   append cmd " $owner"
