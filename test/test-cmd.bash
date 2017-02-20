@@ -1,18 +1,29 @@
-#!/bin/bash -eu
+#!/bin/bash -u
 
-pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
-trap 'popd > /dev/null 2>&1' SIGINT EXIT
+function setup() {
+  pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
+  trap 'onExit' SIGINT EXIT
+}
 
-while read line; do
-  result=$(../ops cmd -F ./ssh_config -q "${line}" 'uname -n')
-  ret=$?
-  if [[ $ret  != 0 ]]; then
-    error "ERROR - ${line}"
-  elif [ "${result}" != "${line}" ]; then
-    echo -e "NG - ${line} <-> ${result}"
-  else
-    echo -e "OK - ${line}"
-  fi
-done <<'END'
+function onExit() {
+  popd > /dev/null 2>&1
+}
+
+function testCommand() {
+  while read -r line; do
+    local result=$(../ops cmd -F ./ssh_config -q "${line}" 'uname -n')
+    if [[ $?  != 0 ]]; then
+      error "ERROR - ${line}"
+    elif [ "${result}" != "${line}" ]; then
+      echo -e "NG - ${line} <-> ${result}"
+    else
+      echo -e "OK - ${line}"
+    fi
+  done <<'END'
+w01
 w01
 END
+}
+
+setup
+testCommand
