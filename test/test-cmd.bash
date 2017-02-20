@@ -10,16 +10,18 @@ function onExit() {
 }
 
 function testCommand() {
-  while read -r line; do
-    local result=$(../ops cmd -F ./ssh_config -q "${line}" 'uname -n')
+  echo "$FUNCNAME - $BASH_SOURCE"
+  local _line=
+  while read -r _line; do
+    local _result=$(../ops cmd -F ./ssh_config -q "${_line}" 'uname -n')
     if [[ $?  != 0 ]]; then
-      error "ERROR - ${line}"
-    elif [ "${result}" != "${line}" ]; then
-      echo -e "NG - ${line} <-> ${result}"
+      error "ERROR - ${_line}"
+    elif [ "${_result}" != "${_line}" ]; then
+      echo -e "NG - ${_line} <-> ${_result}"
     else
-      echo -e "OK - ${line}"
+      echo -e "OK - ${_line}"
     fi
-  done <<'END'
+  done <<-'END'
 w01
 w01
 END

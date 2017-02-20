@@ -22,12 +22,14 @@ function onExit() {
 }
 
 function testCopy() {
-  while read line; do
-    case "${line}" in
+  echo "$FUNCNAME - $BASH_SOURCE"
+  local _line=
+  while read -r _line; do
+    case "${_line}" in
       \#* ) continue ;;
-      * )   echo "line: $line" ;;
+      * )   echo "case: $_line" ;;
     esac
-    set -- ${line}
+    set -- ${_line}
     ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
     ../ops copy -F ./ssh_config -q -l 1024 "$@"
     ../ops cmd -F ./ssh_config -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
@@ -42,12 +44,14 @@ END
 }
 
 function testChangeOwnerAndChangeMode() {
-  while read line; do
-    case "${line}" in
+  echo "$FUNCNAME - $BASH_SOURCE"
+  local _line=
+  while read -r _line; do
+    case "${_line}" in
       \#* ) continue ;;
-      * )   echo "line: $line" ;;
+      * )   echo "case: $_line" ;;
     esac
-    set -- ${line}
+    set -- ${_line}
     ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
     ../ops copy -F ./ssh_config -q -l 1024 "$@"
     ../ops cmd -F ./ssh_config -q "${1}" "ls -l ${dest_dir} && rm -rf ${dest_dir}"
@@ -68,19 +72,21 @@ END
 
 # test backup
 function testBackup() {
-  while read line; do
-    case "${line}" in
+  echo "$FUNCNAME - $BASH_SOURCE"
+  local _line=
+  while read -r _line; do
+    case "${_line}" in
       \#* ) continue ;;
-      * )   echo "line: $line" ;;
+      * )   echo "case: $_line" ;;
     esac
-    set -- ${line}
-    local flag="${1}"
+    set -- ${_line}
+    local _flag="${1}"
     shift
     ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
-    case "${flag}" in
+    case "${_flag}" in
       *\.txt )
         # setup no-empty file
-        ../ops cmd -F ./ssh_config -q "${1}" "cp /var/log/syslog ${dest_dir}/${flag}"
+        ../ops cmd -F ./ssh_config -q "${1}" "cp /var/log/syslog ${dest_dir}/${_flag}"
         ;;
       2 )
         ../ops copy -F ./ssh_config -q -l 1024 "$@"
