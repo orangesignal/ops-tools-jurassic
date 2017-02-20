@@ -58,7 +58,7 @@ Usage: $(myname) [-F ssh_config] [-p passlist] [-q] ssh hostname [command...]
 $(show_common_params)
 
 Examples:
-  $(myname) cmd www01 'uname -n && env'
+  $(myname) ssh www01 'uname -n && env'
 
 END
 }
