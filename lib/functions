@@ -75,13 +75,12 @@ function _ops_ssh_stdin() {
 
 function _ops_scp() {
 #  sshpass -p "${password}" scp${ssh_args} ${scp_args} -r ${1:?} ${2:?} > /dev/null 2>&1
-  sshpass -p "${password}" scp${ssh_args} ${scp_args} -r ${1:?} ${2:?}
+  sshpass -p "${password}" scp${ssh_args}${scp_args} -r ${1:?} ${2:?}
   return $?
 }
 
 function _ops_rsync() {
-  sshpass -p "${password}" rsync -a -e "ssh${ssh_args}" ${rsync_args} ${1:?} ${2:?}
-   #> /dev/null 2>&1
+  sshpass -p "${password}" rsync -a -e "ssh${ssh_args}"${rsync_args} ${1:?} ${2:?}
   return $?
 }
 
@@ -185,24 +184,19 @@ function ops_copy() {
 
   declare -r _glob_ignore_save=${GLOBIGNORE:-}
   GLOBIGNORE=*
-
   declare -r _src="${1:?}"
   shift
 
   declare -r _work_name="$(_generate_ops_work_name)"
-
-  declare -r _remote_work_dir="$(_ops_remote_home_dir)/${_work_name}"
-  declare -r _remote_file="${_remote_work_dir}/script"
-
-  declare -r _copy_work_dir="${_remote_work_dir}/${_work_name}"
-  declare -r _remote_src="${_copy_work_dir}/$(basename ${_src})"
-
+  declare -r _remote_dir="$(_ops_remote_home_dir)/${_work_name}"
+  declare -r _remote_child_dir="${_remote_dir}/${_work_name}"
+  declare -r _remote_file="${_remote_dir}/script"
+  declare -r _remote_src="${_remote_child_dir}/$(basename ${_src})"
   declare -i _ret=0
 
-  _ops_mkdir "${_copy_work_dir}"
-
+  _ops_mkdir "${_remote_child_dir}"
   # copy src to work_dir
-  _ops_rsync ${_src} "${username}"@"${hostname}":"${_copy_work_dir}"
+  _ops_rsync ${_src} "${username}"@"${hostname}":"${_remote_child_dir}"
   _ret=$?
   if [[ ${_ret} != 0 ]]; then
     error "ERROR - copy failed."
@@ -219,14 +213,13 @@ function ops_copy() {
     fi
   fi
 
-  _ops_rmdir "${_remote_work_dir}"
+  _ops_rmdir "${_remote_dir}"
 
   if [[ "${_glob_ignore_save}" = '' ]]; then
     unset GLOBIGNORE
   else
     GLOBIGNORE=${_glob_ignore_save}
   fi
-
   return ${_ret}
 }
 
@@ -238,10 +231,11 @@ function ops_fetch() {
   declare -r _dest="${2:?}"
   declare -r _remote_dir="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
   declare -r _remote_src="${_remote_dir}/$(basename ${_src})"
+  declare -i _ret=0
 
   _ops_mkdir "${_remote_dir}"
   _ops_expect 'noecho' "$(self_dir)/exp/fetch.exp" ${_src} "${_remote_dir}"
-  declare -i _ret=$?
+  _ret=$?
   if [[ ${_ret} == 0 ]]; then
     _ops_scp "${username}"@"${hostname}":${_remote_src} "${_dest}"
     _ret=$?

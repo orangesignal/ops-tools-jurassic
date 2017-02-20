@@ -2,7 +2,8 @@
 
 pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
 
-src="$(pwd)/test-copy-$(date +%Y%m%d%H%M%S)"
+base="test-copy-$(date +%Y%m%d%H%M%S)"
+src="$(pwd)/${base}"
 dest="/var/tmp/foobar"
 
 trap 'rm -rf "${src}"; popd > /dev/null 2>&1' SIGINT EXIT
@@ -19,7 +20,7 @@ touch "${src}/baz/baz.html"
 while read hostname; do
   ../ops copy -F ./ssh_config -q -l 1024 "${hostname}" "${src}" "${dest}" -backup yes
   ret=$?
-  ../ops cmd -F ./ssh_config -q "${hostname}" "find ${dest} && rm -rf ${dest}"
+  ../ops cmd -F ./ssh_config -q "${hostname}" "find ${dest} | sort && rm -rf ${dest}"
 done <<'END'
 w01
 END
