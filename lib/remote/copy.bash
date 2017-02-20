@@ -2,19 +2,18 @@
 
 set -e
 
-declare -r act="${1:-'doCopy'}"
-declare -r src=${2:?}
-declare -r dest="${3:?}"
-declare -r owner="${4}"
-declare -r mode="${5}"
-declare -r backup="${6}"
-declare -r suffix="${7:-${SIMPLE_BACKUP_SUFFIX:-~}}"
+declare -r src=${1:?}
+declare -r dest="${2:?}"
+declare -r owner="${3}"
+declare -r mode="${4}"
+declare -r backup="${5}"
+declare -r suffix="${6:-${SIMPLE_BACKUP_SUFFIX:-~}}"
 
 function basename() {
   echo "${1##*/}"
 }
 
-function doBackup() {
+function doBackupIfNeed() {
   local _backup_src="${dest}"
   local _backup_dest=
 
@@ -57,4 +56,5 @@ function doCopy() {
   fi
 }
 
-eval "${act}"
+doBackupIfNeed
+doCopy
