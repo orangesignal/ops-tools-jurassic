@@ -62,9 +62,9 @@ expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
   password: {
-    stty -echo
+#    stty -echo
     send -- "$password\r"
-    stty echo
+#    stty echo
   }
 }
 expect {
@@ -72,9 +72,9 @@ expect {
   -re $prompt {
   }
   : {
-    stty -echo
+#    stty -echo
     send -- "$root_password\r"
-    stty echo
+#    stty echo
     expect {
       timeout { abort "Failed to Switch Root.\n" }
       -re $prompt

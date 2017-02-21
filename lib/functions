@@ -23,23 +23,30 @@ function _find_passlist() {
   elif [[ -f "$(pwd)/passlist" ]]; then
     _passlist="$(pwd)/passlist"
   else
-    abort "Pallist file not found. [${passlist}]"
+     error "Pallist file not found. [${passlist}]"
+     return 1
   fi
   echo "${_passlist}"
+  return $?
 }
 
 function _init_ssh_params() {
   if [[ "${1}" = '' ]]; then
-    abort "hostname must not be null."
+    error "hostname must not be null."
+    return 1
   fi
 
   hostname="${1}"
   declare -r _passlist=$(_find_passlist)
+  if [[ $? != 0 ]]; then
+    return $?;
+  fi
   local _line=$(cat "${_passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^${hostname}	")
   if [[ "${_line}" = '' ]]; then
     _line=$(cat "${_passlist}" | grep -v -e '^\s*#' -e '^\s*$' | grep -m 1 -e "^\*	")
     if [[ "${_line}" = '' ]]; then
-      abort "Unknown hostname ${hostname}"
+      error "Unknown hostname ${hostname}"
+      return 1
     fi
   fi
 
@@ -59,6 +66,8 @@ function _init_ssh_params() {
   password=${3}
   root_cmd=${4:-'sudo su -'}
   root_password=${5:-${password}}
+
+  return $?
 }
 
 function _ops_ssh() {
@@ -103,14 +112,16 @@ function _generate_ops_work_name() {
 
 function _ops_mkdir() {
   if [[ "${1}" = '' ]]; then
-    abort "path must not be null."
+    error "path must not be null."
+    return 1
   fi
   _ops_ssh bash -c "\"if [[ ! -d ${1} ]]; then mkdir -p ${1}; fi\""
 }
 
 function _ops_rmdir() {
   if [[ "${1}" = '' ]]; then
-    abort "path must not be null."
+    error "path must not be null."
+    return 1
   fi
 
   _ops_ssh bash -c "\"if [[ -d ${1} ]]; then rm -rf ${1}; fi\""
@@ -150,6 +161,9 @@ function _ops_expect() {
 
 function ops_cmd() {
   _init_ssh_params "${1}"
+  if [[ $? != 0 ]]; then
+    return $?
+  fi
   shift
 
   local _remote_file=
@@ -170,6 +184,9 @@ function ops_cmd() {
 
 function ops_service() {
   _init_ssh_params "${1}"
+  if [[ $? != 0 ]]; then
+    return $?
+  fi
   shift
   _ops_expect 'echo' "$(self_dir)/exp/service.exp" "$@"
   return $?
@@ -177,6 +194,9 @@ function ops_service() {
 
 function ops_copy() {
   _init_ssh_params "${1}"
+  if [[ $? != 0 ]]; then
+    return $?
+  fi
   shift
   declare -r _srcs="${1:?}"
   shift
@@ -217,6 +237,9 @@ function ops_copy() {
 
 function ops_fetch() {
   _init_ssh_params "${1}"
+  if [[ $? != 0 ]]; then
+    return $?
+  fi
   shift
 
   declare -r _glob_ignore_save=${GLOBIGNORE:-}
