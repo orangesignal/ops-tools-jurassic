@@ -165,11 +165,16 @@ ops を使用すると(良いか悪いかは別として)パスワードを覚�
 
 ## 使い方2
 
-以下はローカル環境の bash スクリプトをリモート環境で実行させる場合の例です。
+以下はローカル環境の bash スクリプトをリモート環境で実行させる場合の例です。   
 ```
 cat example.bash | ./ops ssh hostname bash
 # root で実行するには cmd アクションを使用して下さい。
 cat example.bash | ./ops cmd hostname bash
+
+# 以下のようなヒアドキュメント形式はサポートしません。(恐らく今後も)
+./ops cmd hostname bash <<END
+# command...
+END
 ```
 
 以下はローカル環境のファイルをリモート環境へ簡易コピーする例です。
