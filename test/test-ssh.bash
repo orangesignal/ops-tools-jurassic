@@ -12,8 +12,9 @@ function onExit() {
 function testSsh() {
   echo "$FUNCNAME - $BASH_SOURCE"
   local _line=
+  local result=
   while read -r _line; do
-    local result=$(../ops ssh -F ./ssh_config -q "${_line}" 'uname -n')
+    result=$(../ops ssh -F ./ssh_config -q "${_line}" 'uname -n')
     if [[ $?  != 0 ]]; then
       error "ERROR - ${_line}"
     elif [ "${result}" != "${_line}" ]; then
