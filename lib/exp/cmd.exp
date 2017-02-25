@@ -2,11 +2,12 @@
 log_user 0
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' \'remote_file\' \[command...\]"
   exit 0
 }
 
 ###############################################################################
+# procedure
 
 proc error { msg } {
   send_error -- "$msg"
@@ -23,10 +24,8 @@ proc assertNotEmpty { var { msg "assertion failed" } } {
 
 proc createCommand { argv start } {
   set _remote_file  [lindex $argv $start]
-  set _command      ""
-  incr start
-  set _max [llength $argv]
-  for { set _index $start } { $_index < $_max } { incr _index } {
+  set _command      [lindex $argv [expr $start + 1]]
+  for { set _index [expr $start + 2] } { $_index < [llength $argv] } { incr _index } {
     set _arg [lindex $argv $_index]
     if { $_arg eq "" } {
       append _command " ''"
