@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "$(cd $(dirname $BASH_SOURCE) && pwd)/lib/functions"
+source "$(cd $(dirname $BASH_SOURCE) && pwd)/lib/functions" || exit $?
 
 ###############################################################################
 # functions

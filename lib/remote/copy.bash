@@ -2,6 +2,13 @@
 
 set -e
 
+function error() { echo -e "$@" 1>&2; }
+function abort() { echo -e "$@" 1>&2; exit 1; }
+
+declare -r rsync_cmd=$(type -tap rsync || abort "ERROR - rsync is not installed or not in your PATH")
+declare -r chown_cmd=$(type -tap chown || abort "ERROR - chown is not installed or not in your PATH")
+declare -r chmod_cmd=$(type -tap chmod || abort "ERROR - chmod is not installed or not in your PATH")
+
 declare -r src=${1:?}
 declare -r dest="${2:?}"
 declare -r owner="${3}"
@@ -39,20 +46,20 @@ function doBackupIfNeed() {
       _backup_dest="${_backup_dest}${suffix}"
     done
     # backup
-    rsync -a -q "${_backup_src}" "${_backup_dest}"
+    ${rsync_cmd} -a -q "${_backup_src}" "${_backup_dest}"
   fi
 }
 
 function doCopy() {
   # copy
-  rsync -a -q ${src} "${dest}"
+  ${rsync_cmd} -a -q ${src} "${dest}"
   # chown
   if [[ "${owner}" != '' ]]; then
-    chown -R ${owner} "${dest}"
+    ${chown_cmd} -R ${owner} "${dest}"
   fi
   # mode
   if [[ "${mode}" != '' ]]; then
-    chmod -R ${mode} "${dest}"
+    ${chmod_cmd} -R ${mode} "${dest}"
   fi
 }
 

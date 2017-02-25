@@ -3,7 +3,6 @@
 set -o nounset
 set -o pipefail
 
-# Default config file locations
 passlist="${passlist:-}"
 ssh_args=
 scp_args=
@@ -15,6 +14,11 @@ function self_dir() {
 
 source "$(self_dir)/system"
 source "$(self_dir)/io"
+
+ssh_cmd="$(type -tap ssh || abort "ERROR - ssh is not installed or not in your PATH")"
+scp_cmd="$(type -tap scp || abort "ERROR - scp is not installed or not in your PATH")"
+rsync_cmd="$(type -tap rsync || abort "ERROR - rsync is not installed or not in your PATH")"
+sshpass_cmd="$(type -tapp sshpass || abort "ERROR - sshpass is not installed or not in your PATH")"
 
 function _find_passlist() {
   local _passlist=
@@ -72,22 +76,22 @@ function _init_ssh_params() {
 }
 
 function _ops_ssh() {
-  sshpass -p "${password}" ssh -n${ssh_args} ${username}@${hostname} "$@"
+  ${sshpass_cmd} -p "${password}" ${ssh_cmd} -n${ssh_args} ${username}@${hostname} "$@"
   return $?
 }
 
 function _ops_ssh_stdin() {
-  cat - | sshpass -p "${password}" ssh${ssh_args} ${username}@${hostname} "$@"
+  cat - | ${sshpass_cmd} -p "${password}" ${ssh_cmd}${ssh_args} ${username}@${hostname} "$@"
   return $?
 }
 
 function _ops_scp() {
-  sshpass -p "${password}" scp${ssh_args}${scp_args} -r ${1:?} ${2:?}
+  ${sshpass_cmd} -p "${password}" ${scp_cmd}${ssh_args}${scp_args} -r ${1:?} ${2:?}
   return $?
 }
 
 function _ops_rsync() {
-  sshpass -p "${password}" rsync -a -e "ssh${ssh_args}"${rsync_args} ${1:?} ${2:?}
+  ${sshpass_cmd} -p "${password}" ${rsync_cmd} -a -e "${ssh_cmd}${ssh_args}"${rsync_args} ${1:?} ${2:?}
   return $?
 }
 
