@@ -88,7 +88,7 @@ if { [string length $cmd] > 0 } {
   send -- "$cmd\r"
   expect {
     -re "\n(.*\r).*$prompt" {
-      set msg [string trimright "$expect_out(1,string)"]
+      set msg [string trimright "$expect_out(1,string)" "\r"]
       send_user -- "$msg\n"
     }
     -re $prompt
