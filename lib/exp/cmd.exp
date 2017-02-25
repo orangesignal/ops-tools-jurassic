@@ -9,8 +9,45 @@ if { [llength $argv] == 0 } {
 ###############################################################################
 
 proc abort { msg } {
-  send_error "$msg"
+  send_error "${msg}"
   exit 1
+}
+
+proc create_cmd { argv start } {
+  set _remote_file  [lindex $argv $start]
+  set _cmd          ""
+  incr start
+  for { set _index $start } { $_index < [llength $argv] } { incr _index } {
+    set _str [lindex $argv $_index]
+    if { $_str eq "" } {
+      append _cmd " ''"
+    } else {
+      append _cmd " $_str"
+    }
+  }
+  if { $_remote_file eq ""  } {
+    return "$_cmd"
+  } else {
+    return "cat $_remote_file | $_cmd"
+  }
+}
+
+proc assertNotEmpty { var { msg "assertion failed" } } {
+  if { $var eq "" } { abort $msg }
+}
+
+proc get_prompt_line { buffer prompt } {
+  set lines [split $buffer "\n"]
+  foreach line $lines {
+    if { [regexp $prompt $line] } {
+      set _prompt "$line"
+      break
+    }
+  }
+  if { ![info exists _prompt] } {
+    abort "Failed to get prompt line\n"
+  }
+  return $_prompt
 }
 
 ###############################################################################
@@ -23,36 +60,19 @@ set env(HOME) /usr/local/bin
 set prompt {[#>$] }
 set pw_prompt {[:]}
 
+# parse args
 set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
 set username      [lindex $argv 2]
 set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
+set cmd           [create_cmd $argv 6]
 
-set _remote_file  [lindex $argv 6]
-set _cmd          [lindex $argv 7]
-for { set i 8 } { $i < [llength $argv] } { incr i } {
-  append _cmd " [lindex $argv $i]"
-}
-
-if { $_remote_file eq ""  } {
-  set cmd "$_cmd"
-} else {
-  set cmd "cat $_remote_file | $_cmd"
-}
-unset _remote_file
-unset _cmd
-
-if { $hostname eq "" } {
-  abort "hostname must not be null\n"
-}
-if { $username eq "" } {
-  abort "username must not be null\n"
-}
-if { $root_cmd eq "" } {
-  abort "root_cmd must not be null\n"
-}
+# validation
+assertNotEmpty $hostname
+assertNotEmpty $username
+assertNotEmpty $root_cmd
 
 ###############################################################################
 
@@ -65,10 +85,8 @@ eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
-  password: {
-#    stty -echo
+  *assword: {
     send -- "$password\r"
-#    stty echo
   }
 }
 expect {
@@ -76,9 +94,7 @@ expect {
   -re $prompt {
   }
   : {
-#    stty -echo
     send -- "$root_password\r"
-#    stty echo
     expect {
       timeout { abort "Failed to Switch Root.\n" }
       -re $prompt
@@ -86,6 +102,7 @@ expect {
   }
 }
 
+set _prompt [get_prompt_line $expect_out(buffer) $prompt]
 set timeout -1
 set cmd_status 0
 
@@ -93,11 +110,11 @@ if { [string length $cmd] > 0 } {
   # execute command
   send -- "$cmd\r"
   expect {
-    -re "(\n.*\r)(.*$prompt)" {
-      set msg [string trim "$expect_out(1,string)"]
-      send_user "$msg\n"
+    -re "\n(.*\r).*$_prompt" {
+      set msg [string trimright "$expect_out(1,string)"]
+      send_user -- "$msg\n"
     }
-    -re $prompt
+    -re $_prompt
   }
 
   # command status
@@ -108,7 +125,7 @@ if { [string length $cmd] > 0 } {
   set cmd_status "$expect_out(1,string)"
 
   expect {
-    -re $prompt
+    -re $_prompt
   }
 }
 
