@@ -12,3 +12,10 @@ proc abort { msg } {
 proc assertNotEmpty { var { msg "assertion failed" } } {
   if { $var eq "" } { abort $msg }
 }
+
+proc defaultString { str defaultStr } {
+  if { $str eq "" } {
+    return $defaultStr
+  }
+  return $str
+}

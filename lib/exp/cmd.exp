@@ -16,12 +16,7 @@ proc createCommand { argv start } {
   set _remote_file  [lindex $argv $start]
   set _command      [lindex $argv [expr $start + 1]]
   for { set _index [expr $start + 2] } { $_index < [llength $argv] } { incr _index } {
-    set _arg [lindex $argv $_index]
-    if { $_arg eq "" } {
-      append _command " ''"
-    } else {
-      append _command " $_arg"
-    }
+    append _command " [defaultString [lindex $argv $_index] '']"
   }
   if { $_remote_file ne ""  } {
     return "cat $_remote_file | $_command"
@@ -44,13 +39,14 @@ proc getPrompt { buffer prompt } {
 }
 
 ###############################################################################
+# variables
 
 set env(TERM) vt100
 set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set prompt {[#>$] }
+set multiPrompt {[#>$] }
 set pw_prompt {[:]}
 
 # parse args
@@ -68,12 +64,10 @@ assertNotEmpty $username "username must not be null\n"
 assertNotEmpty $root_cmd "root_cmd must not be null\n"
 
 ###############################################################################
+# spawn - ssh login + switch to root
 
-# ssh login + switch to root
 set timeout 10
 eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
-
-###############################################################################
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
@@ -84,18 +78,22 @@ expect {
 }
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt {
+  -re $multiPrompt {
+    # sudo NOPASSWD
   }
   : {
     send -- "$root_password\r"
     expect {
       timeout { abort "Failed to Switch Root.\n" }
-      -re $prompt
+      -re $multiPrompt
     }
   }
 }
 
-set _prompt [getPrompt $expect_out(buffer) $prompt]
+###############################################################################
+# operation
+
+set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 set cmd_status 0
 
@@ -103,11 +101,11 @@ if { [string length $cmd] > 0 } {
   # execute command
   send -- "$cmd\r"
   expect {
-    -re "\n(.*\r).*$_prompt" {
+    -re "\n(.*\r).*$prompt" {
       set msg [string trimright "$expect_out(1,string)"]
       send_user -- "$msg\n"
     }
-    -re $_prompt
+    -re $prompt
   }
 
   # command status
@@ -118,7 +116,7 @@ if { [string length $cmd] > 0 } {
   set cmd_status "$expect_out(1,string)"
 
   expect {
-    -re $_prompt
+    -re $prompt
   }
 }
 
