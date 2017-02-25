@@ -11,7 +11,7 @@ function myname() {
 
 function show_version() {
 cat <<-END
-$(myname) version 0.1
+$(myname) version 0.2
 Copyright 2017 OrangeSignal (Koji Sugisawa).
 Licensed under the Apache License, Version 2.0
 END
@@ -21,11 +21,11 @@ function show_common_params() {
 cat <<-END
 
 Common parameters:
+  -n
+  -q               quiet mode
   -F               ssh_config file
   -p               passlist file
   -l               limits the used bandwidth (kB/sec)
-  -n
-  -q               quiet mode
   -h, --help       display this help and exit
   -v, --version    output version information and exit
 END
@@ -33,7 +33,7 @@ END
 
 function show_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] [ssh|scp|cmd|command|service|fetch|copy hostname args...]
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] ssh|scp|cmd|command|service|fetch|copy hostname args...
 指定された ops アクションを実行します。
 $(show_common_params)
 
@@ -50,7 +50,7 @@ END
 
 function show_ssh_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] ssh hostname [command...]
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] ssh hostname [command...]
 指定されたホストへ SSH 接続して、指定されたコマンドを実行します。
 $(show_common_params)
 
@@ -62,7 +62,7 @@ END
 
 function show_scp_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] scp hostname [%u@%h:]src [%u@%h:]dest
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] scp hostname [%u@%h:]src [%u@%h:]dest
 
 $(show_common_params)
 
@@ -74,7 +74,7 @@ END
 
 function show_cmd_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] cmd|command hostname [command...]
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] cmd|command hostname [command...]
 指定されたホストへ SSH 接続 + root 化して指定されたコマンドを実行します。
 $(show_common_params)
 
@@ -86,7 +86,7 @@ END
 
 function show_service_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] service hostname service_name [command]
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] service hostname service_name [command]
 指定されたホストへ SSH 接続 + root 化して指定されたサービスへコマンドを実行します。
 $(show_common_params)
 
@@ -98,7 +98,7 @@ END
 
 function show_fetch_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] fetch hostname src dest
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] fetch hostname src dest
 指定されたホストへ SSH 接続 + root 化してリモートの src からローカルの dest へ複数のファイルまたはディレクトリを取得します。
 $(show_common_params)
 
@@ -110,7 +110,7 @@ END
 
 function show_copy_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
 指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
 
 Parameters:
@@ -169,6 +169,7 @@ function parse_args() {
         esac
         exit 0
         ;;
+
       -F )
         if [[ ! -f "${2}" ]]; then
           abort "$(myname): -F ${2} ssh_config file not found."
@@ -183,16 +184,6 @@ function parse_args() {
         passlist="${2}"
         shift 2
         ;;
-      -n )
-        noinput=true
-        shift
-        ;;
-      -q )
-        quiet=true
-        ssh_args="${ssh_args} -q"
-        rsync_args="${rsync_args} -q"
-        shift
-        ;;
       -l )
         if [[ "${2}" = '' ]]; then
           abort "$(myname): -l Illegal parameter."
@@ -202,10 +193,6 @@ function parse_args() {
         # kB/sec
         rsync_args="${rsync_args} --bwlimit=${2}"
         shift 2
-        ;;
-      ssh | scp | cmd | command | service | fetch | copy )
-        ops_type="${1}"
-        shift
         ;;
       -owner )
         if [[ "${2}" = '' ]]; then
@@ -234,6 +221,22 @@ function parse_args() {
         fi
         _suffix="${2}"
         shift 2
+        ;;
+      -* )
+        if [[ "$1" =~ 'n' ]]; then
+          noinput=true
+        elif [[ "$1" =~ 'q' ]]; then
+          quiet=true
+          ssh_args="${ssh_args} -q"
+          rsync_args="${rsync_args} -q"
+        else
+          abort "$(myname): ${1} Unknown option."
+        fi
+        shift
+        ;;
+      ssh | scp | cmd | command | service | fetch | copy )
+        ops_type="${1}"
+        shift
         ;;
       *)
         _ops_args+=("${1}")

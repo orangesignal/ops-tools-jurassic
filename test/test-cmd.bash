@@ -14,7 +14,7 @@ function testCommand() {
   local _line=
   local _result=
   while read -r _line; do
-    _result=$(../ops -F ./ssh_config -n -q cmd "${_line}" 'uname -n')
+    _result=$(../ops -nq -F ./ssh_config cmd "${_line}" 'uname -n')
     if [[ $?  != 0 ]]; then
       error "ERROR - ${_line}"
     elif [ "${_result}" != "${_line}" ]; then
