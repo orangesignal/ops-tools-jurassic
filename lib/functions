@@ -92,13 +92,15 @@ function _ops_rsync() {
 }
 
 function ops_ssh() {
-  _init_ssh_params "${1}"
+  _init_ssh_params "${1}" || return $?
   shift
+
   if [[ -p /dev/stdin ]]; then
     _ops_ssh_stdin "$@"
   else
     _ops_ssh "$@"
   fi
+  return $?
 }
 
 ###############################################################################
@@ -117,6 +119,7 @@ function _ops_mkdir() {
     return 1
   fi
   _ops_ssh bash -c "\"if [[ ! -d ${1} ]]; then mkdir -p ${1}; fi\""
+  return $?
 }
 
 function _ops_rmdir() {
@@ -162,16 +165,13 @@ function _ops_expect() {
 }
 
 function ops_cmd() {
-  _init_ssh_params "${1}"
-  if [[ $? != 0 ]]; then
-    return $?
-  fi
+  _init_ssh_params "${1}" || return $?
   shift
 
   local _remote_file=
   if [[ -p /dev/stdin ]]; then
     _remote_file="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
-    _ops_ssh_stdin "cat >${_remote_file}"
+    _ops_ssh_stdin "cat >${_remote_file}" || return $?
   fi
 
   _ops_expect 'echo' "$(self_dir)/exp/cmd.exp" "${_remote_file}" "$@"
@@ -185,20 +185,14 @@ function ops_cmd() {
 }
 
 function ops_service() {
-  _init_ssh_params "${1}"
-  if [[ $? != 0 ]]; then
-    return $?
-  fi
+  _init_ssh_params "${1}" || return $?
   shift
   _ops_expect 'echo' "$(self_dir)/exp/service.exp" "$@"
   return $?
 }
 
 function ops_copy() {
-  _init_ssh_params "${1}"
-  if [[ $? != 0 ]]; then
-    return $?
-  fi
+  _init_ssh_params "${1}" || return $?
   shift
   declare -r _srcs="${1:?}"
   shift
@@ -209,7 +203,7 @@ function ops_copy() {
   declare -r _remote_file="${_remote_dir}/script"
   declare -i _ret=0
 
-  _ops_mkdir "${_remote_child_dir}"
+  _ops_mkdir "${_remote_child_dir}" || return $?
   # copy remote script file
   _ops_scp "$(self_dir)/remote/copy.bash" "${username}"@"${hostname}":"${_remote_file}"
   _ret=$?
@@ -221,14 +215,14 @@ function ops_copy() {
       _ops_rsync ${_src} "${username}"@"${hostname}":"${_remote_child_dir}"
       _ret=$?
       if [[ ${_ret} != 0 ]]; then
-        break;
+        break
       fi
       # copy work_path to dest (+ chown + chmod)
       _remote_src="${_remote_child_dir}/$(basename ${_src})"
       _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" ${_remote_src} "$@"
       _ret=$?
       if [[ ${_ret} != 0 ]]; then
-        break;
+        break
       fi
     done
   fi
@@ -238,10 +232,7 @@ function ops_copy() {
 }
 
 function ops_fetch() {
-  _init_ssh_params "${1}"
-  if [[ $? != 0 ]]; then
-    return $?
-  fi
+  _init_ssh_params "${1}" || return $?
   shift
 
   declare -r _glob_ignore_save=${GLOBIGNORE:-}
@@ -253,7 +244,7 @@ function ops_fetch() {
   declare -r _remote_src="${_remote_dir}/$(basename ${_src})"
   declare -i _ret=0
 
-  _ops_mkdir "${_remote_dir}"
+  _ops_mkdir "${_remote_dir}" || return $?
   _ops_expect 'noecho' "$(self_dir)/exp/fetch.exp" "${_src}" "${_remote_dir}"
   _ret=$?
   if [[ ${_ret} == 0 ]]; then
