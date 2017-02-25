@@ -4,9 +4,9 @@ proc error { msg } {
   send_error -- "$msg"
 }
 
-proc abort { msg } {
+proc abort { msg { errcode 1 } } {
   send_error -- "$msg"
-  exit 1
+  exit $errcode
 }
 
 proc assertNotEmpty { var { msg "assertion failed" } } {
