@@ -6,21 +6,11 @@ if { [llength $argv] == 0 } {
   exit 0
 }
 
+set self_dir [file dirname $argv0]
+source "$self_dir/proc.tcl"
+
 ###############################################################################
 # procedure
-
-proc error { msg } {
-  send_error -- "$msg"
-}
-
-proc abort { msg } {
-  send_error -- "$msg"
-  exit 1
-}
-
-proc assertNotEmpty { var { msg "assertion failed" } } {
-  if { $var eq "" } { abort $msg }
-}
 
 proc createCommand { argv start } {
   set _remote_file  [lindex $argv $start]
