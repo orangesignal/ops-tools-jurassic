@@ -70,9 +70,9 @@ set root_password [lindex $argv 5]
 set cmd           [create_cmd $argv 6]
 
 # validation
-assertNotEmpty $hostname
-assertNotEmpty $username
-assertNotEmpty $root_cmd
+assertNotEmpty $hostname "hostname must not be null\n"
+assertNotEmpty $username "username must not be null\n"
+assertNotEmpty $root_cmd "root_cmd must not be null\n"
 
 ###############################################################################
 
