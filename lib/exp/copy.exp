@@ -66,21 +66,21 @@ set timeout 10
 eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
 
 expect {
-  eof     { abort "SSH failure for remote host $hostname\n" }
-  timeout { abort "Failed to get password prompt\n" }
+  eof     { abort "SSH failure for remote host $hostname\n" 255 }
+  timeout { abort "Failed to get password prompt\n" 255 }
   *assword: {
     send -- "$password\r"
   }
 }
 expect {
-  timeout { abort "Login failed. Password incorrect.\n" }
+  timeout { abort "Login failed. Password incorrect.\n" 5 }
   -re $multiPrompt {
     # sudo NOPASSWD
   }
   : {
     send -- "$root_password\r"
     expect {
-      timeout { abort "Failed to Switch Root.\n" }
+      timeout { abort "Failed to Switch Root.\n" 5 }
       -re $multiPrompt
     }
   }
