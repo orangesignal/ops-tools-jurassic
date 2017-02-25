@@ -86,12 +86,12 @@ function _ops_ssh_stdin() {
 }
 
 function _ops_scp() {
-  ${sshpass_cmd} -p "${password}" ${scp_cmd}${ssh_args}${scp_args} -r ${1:?} ${2:?}
+  ${sshpass_cmd} -p "${password}" ${scp_cmd}${ssh_args}${scp_args} -r "$@"
   return $?
 }
 
 function _ops_rsync() {
-  ${sshpass_cmd} -p "${password}" ${rsync_cmd} -a -e "${ssh_cmd}${ssh_args}"${rsync_args} ${1:?} ${2:?}
+  ${sshpass_cmd} -p "${password}" ${rsync_cmd} -a -e "${ssh_cmd}${ssh_args}"${rsync_args} "$@"
   return $?
 }
 
@@ -107,7 +107,32 @@ function ops_ssh() {
   return $?
 }
 
+function _placeholder() {
+  echo "${1/\%u@\%h:/${username}@${hostname}:}"
+}
+
+function ops_scp() {
+  _init_ssh_params "${1}" || return $?
+  shift
+
+  declare -r _glob_ignore_save=${GLOBIGNORE:-}
+  GLOBIGNORE=*
+  declare -r _src="$(_placeholder ${1:?})"
+  shift
+  declare -r _dest="$(_placeholder ${1:?})"
+  shift
+  if [[ "${_glob_ignore_save}" = '' ]]; then
+    unset GLOBIGNORE
+  else
+    GLOBIGNORE=${_glob_ignore_save}
+  fi
+
+  _ops_scp ${_src} ${_dest} "$@"
+  return $?
+}
+
 ###############################################################################
+# root operations
 
 function _ops_remote_home_dir() {
   echo '/var/tmp'
