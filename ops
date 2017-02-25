@@ -1,9 +1,5 @@
 #!/bin/bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
 source "$(cd $(dirname $BASH_SOURCE) && pwd)/lib/functions"
 
 ###############################################################################
@@ -296,19 +292,19 @@ parse_args "$@"
 
 case "${ops_type}" in
   ssh )
-    ops_ssh "${ops_args[@]}"
+    ops_ssh "${ops_args[@]}" || exit $?
     ;;
   cmd | command )
-    ops_cmd "${ops_args[@]}"
+    ops_cmd "${ops_args[@]}" || exit $?
     ;;
   service )
-    ops_service "${ops_args[@]}"
+    ops_service "${ops_args[@]}" || exit $?
     ;;
   fetch )
-    ops_fetch "${ops_args[@]}"
+    ops_fetch "${ops_args[@]}" || exit $?
     ;;
   copy )
-    ops_copy "${ops_args[@]}"
+    ops_copy "${ops_args[@]}" || exit $?
     ;;
   * )
     abort "$(myname): Unsupported ops action."
