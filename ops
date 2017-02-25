@@ -230,7 +230,7 @@ function parse_args() {
   if [[ "${ops_type}" = '' ]]; then
     abort "$(myname): Unknown ops action."
   fi
-  if [[ "${_ops_args[0]}" = '' ]]; then
+  if [[ ${#_ops_args[@]} == 0 ]] || [[ "${_ops_args[0]}" = '' ]]; then
     abort "$(myname): Unknown hostaname."
   fi
 
