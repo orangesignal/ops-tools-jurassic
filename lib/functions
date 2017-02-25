@@ -37,7 +37,8 @@ function _init_ssh_params() {
   fi
 
   hostname="${1}"
-  declare -r _passlist=$(_find_passlist)
+  local _passlist=
+  _passlist=$(_find_passlist)
   if [[ $? != 0 ]]; then
     return $?;
   fi
@@ -137,7 +138,8 @@ function _ops_expect() {
   shift
   declare -r _expfile=${1:?}
   shift
-  declare -r _msg=$(expect -f "${_expfile}" -- \
+  local _msg=
+  _msg=$(expect -f "${_expfile}" -- \
     "${ssh_args}" \
     "${hostname}" \
     "${username}" \
