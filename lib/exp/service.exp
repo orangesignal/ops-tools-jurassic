@@ -1,4 +1,5 @@
 #!/usr/bin/expect -f
+# deprecated
 log_user 0
 
 if { [llength $argv] == 0 } {
