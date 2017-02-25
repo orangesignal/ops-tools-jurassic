@@ -8,46 +8,50 @@ if { [llength $argv] == 0 } {
 
 ###############################################################################
 
-proc abort { msg } {
-  send_error "${msg}"
-  exit 1
+proc error { msg } {
+  send_error -- "$msg"
 }
 
-proc create_cmd { argv start } {
-  set _remote_file  [lindex $argv $start]
-  set _cmd          ""
-  incr start
-  for { set _index $start } { $_index < [llength $argv] } { incr _index } {
-    set _str [lindex $argv $_index]
-    if { $_str eq "" } {
-      append _cmd " ''"
-    } else {
-      append _cmd " $_str"
-    }
-  }
-  if { $_remote_file eq ""  } {
-    return "$_cmd"
-  } else {
-    return "cat $_remote_file | $_cmd"
-  }
+proc abort { msg } {
+  send_error -- "$msg"
+  exit 1
 }
 
 proc assertNotEmpty { var { msg "assertion failed" } } {
   if { $var eq "" } { abort $msg }
 }
 
-proc get_prompt_line { buffer prompt } {
-  set lines [split $buffer "\n"]
-  foreach line $lines {
+proc createCommand { argv start } {
+  set _remote_file  [lindex $argv $start]
+  set _command      ""
+  incr start
+  set _max [llength $argv]
+  for { set _index $start } { $_index < $_max } { incr _index } {
+    set _arg [lindex $argv $_index]
+    if { $_arg eq "" } {
+      append _command " ''"
+    } else {
+      append _command " $_arg"
+    }
+  }
+  if { $_remote_file ne ""  } {
+    return "cat $_remote_file | $_command"
+  }
+  return "$_command"
+}
+
+proc getPrompt { buffer prompt } {
+  set _lines [split $buffer "\n"]
+  foreach line $_lines {
     if { [regexp $prompt $line] } {
-      set _prompt "$line"
+      set _result "$line"
       break
     }
   }
-  if { ![info exists _prompt] } {
+  if { ![info exists _result] } {
     abort "Failed to get prompt line\n"
   }
-  return $_prompt
+  return $_result
 }
 
 ###############################################################################
@@ -67,7 +71,7 @@ set username      [lindex $argv 2]
 set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
-set cmd           [create_cmd $argv 6]
+set cmd           [createCommand $argv 6]
 
 # validation
 assertNotEmpty $hostname "hostname must not be null\n"
@@ -102,7 +106,7 @@ expect {
   }
 }
 
-set _prompt [get_prompt_line $expect_out(buffer) $prompt]
+set _prompt [getPrompt $expect_out(buffer) $prompt]
 set timeout -1
 set cmd_status 0
 
