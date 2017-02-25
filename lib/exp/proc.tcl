@@ -19,3 +19,17 @@ proc defaultString { str defaultStr } {
   }
   return $str
 }
+
+proc getPrompt { buffer prompt } {
+  set _lines [split $buffer "\n"]
+  foreach line $_lines {
+    if { [regexp $prompt $line] } {
+      set _result "$line"
+      break
+    }
+  }
+  if { ![info exists _result] } {
+    abort "Failed to get prompt line\n"
+  }
+  return $_result
+}

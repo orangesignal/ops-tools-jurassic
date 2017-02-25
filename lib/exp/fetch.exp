@@ -6,23 +6,21 @@ if { [llength $argv] == 0 } {
   exit 0
 }
 
-###############################################################################
-
-proc abort { msg } {
-  send_error "$msg"
-  exit 1
-}
+set self_dir [file dirname $argv0]
+source "$self_dir/proc.tcl"
 
 ###############################################################################
+# variables
 
 set env(TERM) vt100
 set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set prompt {[#>$] }
+set multiPrompt {[#>$] }
 set pw_prompt {[:]}
 
+# parse args
 set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
 set username      [lindex $argv 2]
@@ -32,63 +30,53 @@ set root_password [lindex $argv 5]
 set src           [lindex $argv 6]
 set dest          [lindex $argv 7]
 
-if { $hostname eq "" } {
-  abort "hostname must not be null\n"
-}
-if { $username eq "" } {
-  abort "username must not be null\n"
-}
-if { $root_cmd eq "" } {
-  abort "root_cmd must not be null\n"
-}
-if { $src eq "" } {
-  abort "src must not be null\n"
-}
-if { $dest eq "" } {
-  abort "dest must not be null\n"
-}
+# validation
+assertNotEmpty $hostname "hostname must not be null\n"
+assertNotEmpty $username "username must not be null\n"
+assertNotEmpty $root_cmd "root_cmd must not be null\n"
+assertNotEmpty $src      "src must not be null\n"
+assertNotEmpty $dest     "dest must not be null\n"
 
 set cmd "rsync -a -q $src $dest && chown -R $username $dest && chmod -R +rw $dest"
 
 ###############################################################################
+# spawn - ssh login + switch to root
 
-# ssh login + switch to root
 set timeout 10
 eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
-
-###############################################################################
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
-  password: {
-#    stty -echo
+  *assword: {
     send -- "$password\r"
-#    stty echo
   }
 }
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt {
+  -re $multiPrompt {
+    # sudo NOPASSWD
   }
   : {
-#    stty -echo
     send -- "$root_password\r"
-#    stty echo
     expect {
       timeout { abort "Failed to Switch Root.\n" }
-      -re $prompt
+      -re $multiPrompt
     }
   }
 }
 
+###############################################################################
+# operation (root)
+
+set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 
 # execute command
 send -- "$cmd\r"
 expect {
-  -re "(\n.*\r)(.*$prompt)" {
-    set msg [string trim "$expect_out(1,string)"]
+  -re "\n(.*\r).*$prompt" {
+    set msg [string trimright "$expect_out(1,string)"]
     send_user "$msg\n"
   }
   -re $prompt

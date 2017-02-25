@@ -6,23 +6,32 @@ if { [llength $argv] == 0 } {
   exit 0
 }
 
-###############################################################################
+set self_dir [file dirname $argv0]
+source "$self_dir/proc.tcl"
 
-proc abort { msg } {
-  send_error "$msg"
-  exit 1
+###############################################################################
+# procedure
+
+proc createCommand { argv start } {
+  set _command  [lindex $argv $start]
+  for { set _index [expr $start + 1] } { $_index < [llength $argv] } { incr _index } {
+    append _command " [defaultString [lindex $argv $_index] '']"
+  }
+  return "$_command"
 }
 
 ###############################################################################
+# variables
 
 set env(TERM) vt100
 set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set prompt {[#>$] }
+set multiPrompt {[#>$] }
 set pw_prompt {[:]}
 
+# parse args
 set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
 set username      [lindex $argv 2]
@@ -30,60 +39,46 @@ set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
 set service_name  [lindex $argv 6]
-set cmd           [lindex $argv 7]
+set cmd           [createCommand $argv 7]
 
-for { set i 8 } { $i < [llength $argv] } { incr i } {
-  append cmd " [lindex $argv $i]"
-}
-
-if { $hostname eq "" } {
-  abort "hostname must not be null\n"
-}
-if { $username eq "" } {
-  abort "username must not be null\n"
-}
-if { $root_cmd eq "" } {
-  abort "root_cmd must not be null\n"
-}
-if { $service_name eq "" } {
-  abort "service_name must not be null\n"
-}
-if { $cmd eq "" } {
-  abort "cmd must not be null\n"
-}
+# validation
+assertNotEmpty $hostname     "hostname must not be null\n"
+assertNotEmpty $username     "username must not be null\n"
+assertNotEmpty $root_cmd     "root_cmd must not be null\n"
+assertNotEmpty $service_name "service_name must not be null\n"
+assertNotEmpty $cmd          "cmd must not be null\n"
 
 ###############################################################################
+# spawn - ssh login + switch to root
 
-# ssh login + switch to root
 set timeout 10
 eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
-
-###############################################################################
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
-  password: {
-#    stty -echo
+  *assword: {
     send -- "$password\r"
-#    stty echo
   }
 }
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt {
+  -re $multiPrompt {
+    # sudo NOPASSWD
   }
   : {
-#    stty -echo
     send -- "$root_password\r"
-#    stty echo
     expect {
       timeout { abort "Failed to Switch Root.\n" }
-      -re $prompt
+      -re $multiPrompt
     }
   }
 }
 
+###############################################################################
+# operation (root)
+
+set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 
 # execute service command

@@ -24,20 +24,6 @@ proc createCommand { argv start } {
   return "$_command"
 }
 
-proc getPrompt { buffer prompt } {
-  set _lines [split $buffer "\n"]
-  foreach line $_lines {
-    if { [regexp $prompt $line] } {
-      set _result "$line"
-      break
-    }
-  }
-  if { ![info exists _result] } {
-    abort "Failed to get prompt line\n"
-  }
-  return $_result
-}
-
 ###############################################################################
 # variables
 
@@ -91,7 +77,7 @@ expect {
 }
 
 ###############################################################################
-# operation
+# operation (root)
 
 set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1

@@ -6,118 +6,97 @@ if { [llength $argv] == 0 } {
   exit 0
 }
 
-###############################################################################
+set self_dir [file dirname $argv0]
+source "$self_dir/proc.tcl"
 
-proc abort { msg } {
-  send_error "$msg"
-  exit 1
+###############################################################################
+# procedure
+
+proc createCommand { argv start } {
+  set remote_file   [lindex $argv $start]
+  set src           [lindex $argv [expr $start + 1]]
+  set dest          [lindex $argv [expr $start + 2]]
+  set owner         [lindex $argv [expr $start + 3]]
+  set mode          [lindex $argv [expr $start + 4]]
+  set backup        [lindex $argv [expr $start + 5]]
+  set suffix        [lindex $argv [expr $start + 6]]
+
+  assertNotEmpty $remote_file "remote_file must not be null\n"
+  assertNotEmpty $src         "src must not be null\n"
+  assertNotEmpty $dest        "dest must not be null\n"
+
+  set cmd "bash $remote_file $src $dest"
+  append cmd " [defaultString $owner  '']"
+  append cmd " [defaultString $mode   '']"
+  append cmd " [defaultString $backup '']"
+  append cmd " [defaultString $suffix '']"
+
+  return "$cmd"
 }
 
 ###############################################################################
+# variables
 
 set env(TERM) vt100
 set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set prompt {[#>$] }
+set multiPrompt {[#>$] }
 set pw_prompt {[:]}
 
+# parse args
 set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
 set username      [lindex $argv 2]
 set password      [lindex $argv 3]
 set root_cmd      [lindex $argv 4]
 set root_password [lindex $argv 5]
-set remote_file   [lindex $argv 6]
-set src           [lindex $argv 7]
-set dest          [lindex $argv 8]
-set owner         [lindex $argv 9]
-set mode          [lindex $argv 10]
-set backup        [lindex $argv 11]
-set suffix        [lindex $argv 12]
+set cmd           [createCommand $argv 6]
 
-if { $hostname eq "" } {
-  abort "hostname must not be null\n"
-}
-if { $username eq "" } {
-  abort "username must not be null\n"
-}
-if { $root_cmd eq "" } {
-  abort "root_cmd must not be null\n"
-}
-if { $remote_file eq "" } {
-  abort "remote_file must not be null\n"
-}
-if { $src eq "" } {
-  abort "src must not be null\n"
-}
-if { $dest eq "" } {
-  abort "dest must not be null\n"
-}
-
-set cmd "bash $remote_file $src $dest"
-
-if { $owner ne "" } {
-  append cmd " $owner"
-} else {
-  append cmd " ''"
-}
-if { $mode ne "" } {
-  append cmd " $mode"
-} else {
-  append cmd " ''"
-}
-if { $backup ne "" } {
-  append cmd " $backup"
-} else {
-  append cmd " ''"
-}
-if { $suffix ne "" } {
-  append cmd " $suffix"
-} else {
-  append cmd " ''"
-}
+# validation
+assertNotEmpty $hostname "hostname must not be null\n"
+assertNotEmpty $username "username must not be null\n"
+assertNotEmpty $root_cmd "root_cmd must not be null\n"
 
 ###############################################################################
+# spawn - ssh login + switch to root
 
-# ssh login + switch to root
 set timeout 10
 eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
-
-###############################################################################
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" }
   timeout { abort "Failed to get password prompt\n" }
-  password: {
-#    stty -echo
+  *assword: {
     send -- "$password\r"
-#    stty echo
   }
 }
 expect {
   timeout { abort "Login failed. Password incorrect.\n" }
-  -re $prompt {
+  -re $multiPrompt {
+    # sudo NOPASSWD
   }
   : {
-#    stty -echo
     send -- "$root_password\r"
-#    stty echo
     expect {
       timeout { abort "Failed to Switch Root.\n" }
-      -re $prompt
+      -re $multiPrompt
     }
   }
 }
 
+###############################################################################
+# operation (root)
+
+set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 
 # execute command
 send -- "$cmd\r"
 expect {
-  -re "(\n.*\r)(.*$prompt)" {
-    set msg [string trim "$expect_out(1,string)"]
+  -re "\n(.*\r).*$prompt" {
+    set msg [string trimright "$expect_out(1,string)"]
     send_user "$msg\n"
   }
   -re $prompt
