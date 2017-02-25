@@ -129,7 +129,7 @@ w02	devops2	234567	su -
 ./ops cmd hostname service jenkins stop
 ```
 
-### service (service の落とし上げ)
+### service (service の落とし上げ) ... 非推奨 (将来的に削除)
 
 `cmd` でもサービスの落とし上げは可能です。   
 `service` では、サービスの落とし上げ後にサービス名に一致するプロセス数を返します。
