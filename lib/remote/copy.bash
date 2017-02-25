@@ -4,6 +4,7 @@ set -e
 
 function error() { echo -e "$@" 1>&2; }
 function abort() { echo -e "$@" 1>&2; exit 1; }
+function trace_run() { echo "+ $@"; "$@"; }
 
 declare -r rsync_cmd=$(type -tap rsync || abort "ERROR - rsync is not installed or not in your PATH")
 declare -r chown_cmd=$(type -tap chown || abort "ERROR - chown is not installed or not in your PATH")
