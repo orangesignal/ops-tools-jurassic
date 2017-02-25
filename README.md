@@ -171,8 +171,8 @@ cat example.bash | ./ops ssh hostname bash
 # root で実行するには cmd アクションを使用して下さい。
 cat example.bash | ./ops cmd hostname bash
 
-# 以下のようなヒアドキュメント形式はサポートしません。(恐らく今後も)
-./ops cmd hostname bash <<END
+# 以下はヒアドキュメント形式での例
+./ops cmd hostname bash <<'END'
 # command...
 END
 ```
@@ -187,8 +187,7 @@ cat example.txt | ./ops cmd hostname "cat >/var/tmp/example.txt"
 尚、以下の制限があります。
 
 - 今のところ `ssh` と `cmd` アクションのみ対応
-- bash の while ループ中などから呼び出すと、標準入力が切り替わる問題の影響からループ処理が期待通りに動かないかもしれません。   
-(FYI - http://www.m-bsys.com/error/whileread-ssh)
+- `ssh` と同じくデフォルトでは標準入力があると読み込もうとしますので、バッチ処理や、`bash` の `while read` ループ中から呼び出すなど問題が起こる場合は、標準入力を読み込まないよう `-n` オプションを使用して下さい。
 
 ## License
 

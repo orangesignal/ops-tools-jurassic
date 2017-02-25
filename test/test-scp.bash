@@ -27,9 +27,9 @@ function testSsh() {
   while read -r _line; do
     echo "case: $_line"
     set -- ${_line}
-    ../ops -F ./ssh_config -q ssh "${1}" "mkdir ${dest_dir}"
-    ../ops -F ./ssh_config -q -l 1024 scp "$@" || echo "ERROR - ops scp failed"
-    ../ops -F ./ssh_config -q ssh "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    ../ops -F ./ssh_config -n -q ssh "${1}" "mkdir ${dest_dir}"
+    ../ops -F ./ssh_config -n -q -l 1024 scp "$@" || echo "ERROR - ops scp failed"
+    ../ops -F ./ssh_config -n -q ssh "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
   done <<-END
 w01 ${src_dir}/foo.txt %u@%h:${dest_dir}
 w01 ${src_dir}/foo.txt %u@%h:${dest_dir}/renamed-foo.txt

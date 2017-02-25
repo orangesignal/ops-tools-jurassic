@@ -18,7 +18,7 @@ function testFetch() {
   while read -r line; do
     echo "case: $line"
     set -- ${line}
-    ../ops fetch -F ./ssh_config -q -l 1024 "$@"
+    ../ops fetch -F ./ssh_config -n -q -l 1024 "$@"
   done <<-END
 w01 /etc/*.conf     ${dest_dir}/conf
 w01 /var/spool/cron ${dest_dir}

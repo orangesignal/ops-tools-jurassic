@@ -24,6 +24,7 @@ Common parameters:
   -F               ssh_config file
   -p               passlist file
   -l               limits the used bandwidth (kB/sec)
+  -n
   -q               quiet mode
   -h, --help       display this help and exit
   -v, --version    output version information and exit
@@ -32,7 +33,7 @@ END
 
 function show_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] [ssh|cmd|command|service|fetch|copy hostname args...]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] [ssh|scp|cmd|command|service|fetch|copy hostname args...]
 指定された ops アクションを実行します。
 $(show_common_params)
 
@@ -49,7 +50,7 @@ END
 
 function show_ssh_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] ssh hostname [command...]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] ssh hostname [command...]
 指定されたホストへ SSH 接続して、指定されたコマンドを実行します。
 $(show_common_params)
 
@@ -61,7 +62,7 @@ END
 
 function show_scp_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] scp hostname [%u@%h:]src [%u@%h:]dest
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] scp hostname [%u@%h:]src [%u@%h:]dest
 
 $(show_common_params)
 
@@ -73,7 +74,7 @@ END
 
 function show_cmd_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] cmd|command hostname [command...]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] cmd|command hostname [command...]
 指定されたホストへ SSH 接続 + root 化して指定されたコマンドを実行します。
 $(show_common_params)
 
@@ -85,7 +86,7 @@ END
 
 function show_service_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] service hostname service_name [command]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] service hostname service_name [command]
 指定されたホストへ SSH 接続 + root 化して指定されたサービスへコマンドを実行します。
 $(show_common_params)
 
@@ -97,7 +98,7 @@ END
 
 function show_fetch_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] fetch hostname src dest
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] fetch hostname src dest
 指定されたホストへ SSH 接続 + root 化してリモートの src からローカルの dest へ複数のファイルまたはディレクトリを取得します。
 $(show_common_params)
 
@@ -109,7 +110,7 @@ END
 
 function show_copy_usage() {
 cat <<-END
-Usage: $(myname) [-F ssh_config] [-p passlist] [-q] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
+Usage: $(myname) [-F ssh_config] [-p passlist] [-n] [-q] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
 指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
 
 Parameters:
@@ -135,6 +136,8 @@ function parse_args() {
   ssh_args=
   scp_args=
   rsync_args=
+  noinput=false
+  quiet=false
 
   local _ops_args=()
   local _owner=
@@ -180,7 +183,12 @@ function parse_args() {
         passlist="${2}"
         shift 2
         ;;
+      -n )
+        noinput=true
+        shift
+        ;;
       -q )
+        quiet=true
         ssh_args="${ssh_args} -q"
         rsync_args="${rsync_args} -q"
         shift

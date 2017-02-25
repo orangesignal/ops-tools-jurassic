@@ -7,6 +7,8 @@ passlist="${passlist:-}"
 ssh_args=
 scp_args=
 rsync_args=
+noinput=false
+quiet=false
 
 function self_dir() {
   echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
@@ -99,11 +101,13 @@ function ops_ssh() {
   _init_ssh_params "${1}" || return $?
   shift
 
-  if [[ -p /dev/stdin ]]; then
-    _ops_ssh_stdin "$@"
-  else
-    _ops_ssh "$@"
+  if ! $noinput; then
+    if [[ -s /dev/stdin ]]; then
+      _ops_ssh_stdin "$@"
+      return $?
+    fi
   fi
+  _ops_ssh "$@"
   return $?
 }
 
@@ -198,9 +202,11 @@ function ops_cmd() {
   shift
 
   local _remote_file=
-  if [[ -p /dev/stdin ]]; then
-    _remote_file="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
-    _ops_ssh_stdin "cat >${_remote_file}" || return $?
+  if ! $noinput; then
+    if [[ -s /dev/stdin ]]; then
+      _remote_file="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
+      _ops_ssh_stdin "cat >${_remote_file}" || return $?
+    fi
   fi
 
   _ops_expect 'echo' "$(self_dir)/exp/cmd.exp" "${_remote_file}" "$@"

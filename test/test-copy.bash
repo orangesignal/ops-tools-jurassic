@@ -30,9 +30,9 @@ function testCopy() {
       * )   echo "case: $_line" ;;
     esac
     set -- ${_line}
-    ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
-    ../ops copy -F ./ssh_config -q -l 1024 "$@"
-    ../ops cmd -F ./ssh_config -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    ../ops cmd -F ./ssh_config -n -q "${1}" "mkdir ${dest_dir}"
+    ../ops copy -F ./ssh_config -n -q -l 1024 "$@"
+    ../ops cmd -F ./ssh_config -n -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
     echo ''
   done <<END
 w01 ${src_dir}/foo.txt ${dest_dir}
@@ -52,9 +52,9 @@ function testChangeOwnerAndChangeMode() {
       * )   echo "case: $_line" ;;
     esac
     set -- ${_line}
-    ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
-    ../ops copy -F ./ssh_config -q -l 1024 "$@"
-    ../ops cmd -F ./ssh_config -q "${1}" "ls -l ${dest_dir} && rm -rf ${dest_dir}"
+    ../ops cmd -F ./ssh_config -n -q "${1}" "mkdir ${dest_dir}"
+    ../ops copy -F ./ssh_config -n -q -l 1024 "$@"
+    ../ops cmd -F ./ssh_config -n -q "${1}" "ls -l ${dest_dir} && rm -rf ${dest_dir}"
     echo ''
   done <<END
 w01 ${src_dir}/foo.txt ${dest_dir} -owner root
@@ -82,27 +82,27 @@ function testBackup() {
     set -- ${_line}
     local _flag="${1}"
     shift
-    ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${dest_dir}"
+    ../ops cmd -F ./ssh_config -n -q "${1}" "mkdir ${dest_dir}"
     case "${_flag}" in
       *\.txt )
         # setup no-empty file
-        ../ops cmd -F ./ssh_config -q "${1}" "cp /var/log/syslog ${dest_dir}/${_flag}"
+        ../ops cmd -F ./ssh_config -n -q "${1}" "cp /var/log/syslog ${dest_dir}/${_flag}"
         ;;
       2 )
-        ../ops copy -F ./ssh_config -q -l 1024 "$@"
+        ../ops copy -F ./ssh_config -n -q -l 1024 "$@"
         ;;
       3 )
-        ../ops copy -F ./ssh_config -q -l 1024 "$@"
-        ../ops copy -F ./ssh_config -q -l 1024 "$@"
+        ../ops copy -F ./ssh_config -n -q -l 1024 "$@"
+        ../ops copy -F ./ssh_config -n -q -l 1024 "$@"
         ;;
       bkdir )
-        ../ops cmd -F ./ssh_config -q "${1}" "mkdir ${5}"
+        ../ops cmd -F ./ssh_config -n -q "${1}" "mkdir ${5}"
         ;;
       * )
         ;;
     esac
-    ../ops copy -F ./ssh_config -q -l 1024 "$@"
-    ../ops cmd -F ./ssh_config -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    ../ops copy -F ./ssh_config -n -q -l 1024 "$@"
+    ../ops cmd -F ./ssh_config -n -q "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
     echo ''
   done <<-END
 # file

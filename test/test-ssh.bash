@@ -14,7 +14,7 @@ function testSsh() {
   local _line=
   local result=
   while read -r _line; do
-    result=$(../ops ssh -F ./ssh_config -q "${_line}" 'uname -n')
+    result=$(../ops -F ./ssh_config -n -q ssh "${_line}" 'uname -n')
     if [[ $?  != 0 ]]; then
       error "ERROR - ${_line}"
     elif [ "${result}" != "${_line}" ]; then
