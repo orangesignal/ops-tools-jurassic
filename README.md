@@ -48,7 +48,7 @@ chmod +x ops-tools-jurassic/ops
 
 `ssh` や `scp`、`rsync` などセキュアコマンド操作時にリモートサーバーの接続情報として使用します。
 踏み台サーバーを使用する場合、`ssh_config` にプロキシ設定の記載をする必要があります。
-本プロジェクトに付属のサンプルをご覧下さい。   
+本プロジェクトに付属の[サンプル](https://github.com/orangesignal/ops-tools-jurassic/blob/master/test/ssh_config)をご覧下さい。   
 尚、`ssh_config` ファイルの書きっぷりについては、`ssh_config` の公式ページなどをご覧下さい。
 
 `ops` コマンドで、`ssh_config` ファイルが指定されていない場合の検索方法は ssh の仕様と同様です。   
