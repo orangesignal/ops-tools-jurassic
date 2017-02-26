@@ -225,7 +225,8 @@ function parse_args() {
       -* )
         if [[ "$1" =~ 'n' ]]; then
           noinput=true
-        elif [[ "$1" =~ 'q' ]]; then
+        fi
+        if [[ "$1" =~ 'q' ]]; then
           quiet=true
           ssh_args="${ssh_args} -q"
           rsync_args="${rsync_args} -q"
