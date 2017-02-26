@@ -32,7 +32,7 @@ set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set multiPrompt {[#>$] $}
+set multiPrompt {[^\n]*[#>$] $}
 set password_prompt {[^\n]*[pP]assword: $}
 set su_password_prompt {[^\n]*:[ ]*$}
 
