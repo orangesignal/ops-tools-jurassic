@@ -1,5 +1,8 @@
 #!/bin/bash -u
 
+ops_args=
+
+function trace_run() { echo "+ $@"; "$@"; }
 function setup() {
   pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
   trap 'onExit' SIGINT EXIT
@@ -14,7 +17,7 @@ function testCommand() {
   local _line=
   local _result=
   while read -r _line; do
-    _result=$(../ops -n -F ./ssh_config cmd "${_line}" 'uname -n')
+    _result=$(../ops ${ops_args} cmd "${_line}" 'uname -n')
     if [[ $?  != 0 ]]; then
       error "ERROR - ${_line}"
     elif [ "${_result}" != "${_line}" ]; then
@@ -29,4 +32,9 @@ END
 }
 
 setup
+
+ops_args='-n -F ./ssh_config'
+testCommand
+
+ops_args='-nq -F ./ssh_config'
 testCommand

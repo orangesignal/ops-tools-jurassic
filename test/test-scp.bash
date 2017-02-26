@@ -1,5 +1,9 @@
 #!/bin/bash -euf
 
+declare -r ops_args='-n -F ./ssh_config'
+declare -r ops_limit_arg='-l 1024'
+
+function trace_run() { echo "+ $@"; "$@"; }
 function setup() {
   pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
   trap 'onExit' SIGINT EXIT
@@ -27,9 +31,9 @@ function testSsh() {
   while read -r _line; do
     echo "case: $_line"
     set -- ${_line}
-    ../ops -F ./ssh_config -n ssh "${1}" "mkdir ${dest_dir}"
-    ../ops -F ./ssh_config -n -l 1024 scp "$@" || echo "ERROR - ops scp failed"
-    ../ops -F ./ssh_config -n ssh "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    ../ops ${ops_args} ssh "${1}" "mkdir ${dest_dir}"
+    ../ops ${ops_args} ${ops_limit_arg} scp "$@" || echo "ERROR - ops scp failed"
+    ../ops ${ops_args} ssh "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
   done <<-END
 w01 ${src_dir}/foo.txt %u@%h:${dest_dir}
 w01 ${src_dir}/foo.txt %u@%h:${dest_dir}/renamed-foo.txt

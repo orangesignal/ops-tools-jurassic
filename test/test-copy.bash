@@ -1,5 +1,9 @@
 #!/bin/bash -euf
 
+declare -r ops_args='-nq -F ./ssh_config'
+declare -r ops_limit_arg='-l 1024'
+
+function trace_run() { echo "+ $@"; "$@"; }
 function setup() {
   pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
   src_dir="$(pwd)/test-copy-$(date +%Y%m%d%H%M%S)"
@@ -25,14 +29,11 @@ function testCopy() {
   echo "$FUNCNAME - $BASH_SOURCE"
   local _line=
   while read -r _line; do
-    case "${_line}" in
-      \#* ) continue ;;
-      * )   echo "case: $_line" ;;
-    esac
+    echo "case: $_line"
     set -- ${_line}
-    ../ops cmd -F ./ssh_config -n "${1}" "mkdir ${dest_dir}"
-    ../ops copy -F ./ssh_config -n -l 1024 "$@"
-    ../ops cmd -F ./ssh_config -n "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    trace_run ../ops ${ops_args} cmd "${1}" "mkdir ${dest_dir}"
+    trace_run ../ops ${ops_args} ${ops_limit_arg} copy "$@"
+    trace_run ../ops ${ops_args} cmd "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
     echo ''
   done <<END
 w01 ${src_dir}/foo.txt ${dest_dir}
@@ -47,14 +48,11 @@ function testChangeOwnerAndChangeMode() {
   echo "$FUNCNAME - $BASH_SOURCE"
   local _line=
   while read -r _line; do
-    case "${_line}" in
-      \#* ) continue ;;
-      * )   echo "case: $_line" ;;
-    esac
+    echo "case: $_line"
     set -- ${_line}
-    ../ops cmd -F ./ssh_config -n "${1}" "mkdir ${dest_dir}"
-    ../ops copy -F ./ssh_config -n -l 1024 "$@"
-    ../ops cmd -F ./ssh_config -n "${1}" "ls -l ${dest_dir} && rm -rf ${dest_dir}"
+    trace_run ../ops ${ops_args} cmd "${1}" "mkdir ${dest_dir}"
+    trace_run ../ops ${ops_args} ${ops_limit_arg} copy "$@"
+    trace_run ../ops ${ops_args} cmd "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
     echo ''
   done <<END
 w01 ${src_dir}/foo.txt ${dest_dir} -owner root
@@ -82,27 +80,27 @@ function testBackup() {
     set -- ${_line}
     local _flag="${1}"
     shift
-    ../ops cmd -F ./ssh_config -n "${1}" "mkdir ${dest_dir}"
+    trace_run ../ops ${ops_args} cmd "${1}" "mkdir ${dest_dir}"
     case "${_flag}" in
       *\.txt )
         # setup no-empty file
-        ../ops cmd -F ./ssh_config -n "${1}" "cp /var/log/syslog ${dest_dir}/${_flag}"
+        trace_run ../ops ${ops_args} cmd "${1}" "cp /var/log/syslog ${dest_dir}/${_flag}"
         ;;
       2 )
-        ../ops copy -F ./ssh_config -n -l 1024 "$@"
+        trace_run ../ops ${ops_args} ${ops_limit_arg} copy "$@"
         ;;
       3 )
-        ../ops copy -F ./ssh_config -n -l 1024 "$@"
-        ../ops copy -F ./ssh_config -n -l 1024 "$@"
+        trace_run ../ops ${ops_args} ${ops_limit_arg} copy "$@"
+        trace_run ../ops ${ops_args} ${ops_limit_arg} copy "$@"
         ;;
       bkdir )
-        ../ops cmd -F ./ssh_config -n "${1}" "mkdir ${5}"
+        trace_run ../ops ${ops_args} cmd "${1}" "mkdir ${5}"
         ;;
       * )
         ;;
     esac
-    ../ops copy -F ./ssh_config -n -l 1024 "$@"
-    ../ops cmd -F ./ssh_config -n "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
+    trace_run ../ops ${ops_args} ${ops_limit_arg} copy "$@"
+    trace_run ../ops ${ops_args} cmd "${1}" "find ${dest_dir} | sort && rm -rf ${dest_dir}"
     echo ''
   done <<-END
 # file

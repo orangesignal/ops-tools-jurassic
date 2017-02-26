@@ -1,5 +1,9 @@
 #!/bin/bash -euf
 
+declare -r ops_args='-n -F ./ssh_config'
+declare -r ops_limit_arg='-l 1024'
+
+function trace_run() { echo "+ $@"; "$@"; }
 function setup() {
   pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
   trap 'onExit' SIGINT EXIT
@@ -18,7 +22,7 @@ function testFetch() {
   while read -r line; do
     echo "case: $line"
     set -- ${line}
-    ../ops fetch -n -F ./ssh_config -l 1024 "$@"
+    ../ops ${ops_args} ${ops_limit_arg} fetch "$@"
   done <<-END
 w01 /etc/*.conf     ${dest_dir}/conf
 w01 /var/spool/cron ${dest_dir}

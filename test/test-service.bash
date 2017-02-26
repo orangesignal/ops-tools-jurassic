@@ -1,5 +1,8 @@
 #!/bin/bash -u
 
+declare -r ops_args='-n -F ./ssh_config'
+
+function trace_run() { echo "+ $@"; "$@"; }
 function setup() {
   pushd "$(dirname "$BASH_SOURCE")" > /dev/null 2>&1
   trap 'onExit' SIGINT EXIT
@@ -14,7 +17,7 @@ function testService() {
   local _line=
   while read -r _line; do
     set -- ${_line}
-    local result=$(../ops -n -F ./ssh_config service "$@")
+    local result=$(../ops ${ops_args} service "$@")
     if [[ $?  != 0 ]]; then
       error "ERROR - $@"
     else
