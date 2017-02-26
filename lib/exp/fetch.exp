@@ -20,6 +20,8 @@ set env(HOME) /usr/local/bin
 set multiPrompt {[#>$] }
 set pw_prompt {[:]}
 
+set ssh_cmd       [exec which ssh]
+
 # parse args
 set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
@@ -43,7 +45,7 @@ set cmd "rsync -a -q $src $dest && chown -R $username $dest && chmod -R +rw $des
 # spawn - ssh login + switch to root
 
 set timeout 10
-eval spawn -noecho ssh $ssh_args -t $username@$hostname $root_cmd
+eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
@@ -103,7 +105,7 @@ expect eof
 catch wait result
 set os_error [lindex $result 2]
 if { $os_error == -1 } {
-  send_error "Fail to exec\n"
+  send_error -- "Fail to exec\n"
   exit 127
 }
 set status [lindex $result 3]
