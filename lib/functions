@@ -28,6 +28,8 @@ function _find_passlist() {
     _passlist="${passlist}"
   elif [[ -f "$(pwd)/passlist" ]]; then
     _passlist="$(pwd)/passlist"
+  elif [[ -f "~/.ssh/passlist" ]]; then
+    _passlist="~/.ssh/passlist"
   else
      error "Pallist file not found. [${passlist}]"
      return 1
