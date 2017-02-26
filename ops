@@ -76,7 +76,7 @@ END
 function show_cmd_usage() {
 cat <<-END
 Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] cmd|command hostname [command...]
-指定されたホストへ SSH 接続 + root 化して指定されたコマンドを実行します。
+Executes a (root) command on a remote node
 $(show_common_params)
 
 Examples:
@@ -100,7 +100,10 @@ END
 function show_fetch_usage() {
 cat <<-END
 Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] fetch hostname src dest
-指定されたホストへ SSH 接続 + root 化してリモートの src からローカルの dest へ複数のファイルまたはディレクトリを取得します。
+Fetches a file from remote nodes
+
+This module works like copy, but in reverse.
+It is used for fetching files from remote machines and storing them locally in a file tree, organized by hostname.
 $(show_common_params)
 
 Examples:
@@ -112,7 +115,10 @@ END
 function show_copy_usage() {
 cat <<-END
 Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] copy hostname src dest [-owner [owner][:group]] [-mode mode] [ -backup backup-path] [-suffix suffix]
-指定されたホストへ SSH 接続 + root 化してローカルの src からリモートの dest へ複数のファイルまたはディレクトリをコピーします。
+Copies files to remote locations.
+
+The copy action copies a file on the local box to remote locations.
+Use the fetch action to copy files from remote locations to the local box.
 
 Parameters:
   -owner           owner and/or group
