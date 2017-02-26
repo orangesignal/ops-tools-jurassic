@@ -9,6 +9,7 @@ scp_args=
 rsync_args=
 noinput=false
 quiet=false
+verbose=false
 
 function self_dir() {
   echo "$(cd "$(dirname "$BASH_SOURCE")" && pwd)"

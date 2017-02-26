@@ -18,16 +18,17 @@ END
 }
 
 function show_common_params() {
-cat <<-END
+cat <<-'END'
 
 Common parameters:
-  -n
-  -q               quiet mode
-  -F               ssh_config file
-  -p               passlist file
-  -l               limits the used bandwidth (kB/sec)
-  -h, --help       display this help and exit
-  -v, --version    output version information and exit
+  -h, --help       display help information and exit
+  --version        display version information and exit
+  -n, --noinput    do not read /dev/stdin
+  -q, --quiet      quiet mode
+  -v, --verbose    verbose mode
+  -F               use given ssh_config file
+  -p, --passlist   use given passlist file
+  -l, --limit      limits the used bandwidth (kB/sec)
 END
 }
 
@@ -138,6 +139,7 @@ function parse_args() {
   rsync_args=
   noinput=false
   quiet=false
+  verbose=false
 
   local _ops_args=()
   local _owner=
@@ -152,12 +154,12 @@ function parse_args() {
         break
         ;;
 
-      -v | --version )
+      -version | --version )
         show_version
         exit 0
         ;;
 
-      -h | --help )
+      -h | -help | --help )
         case "${ops_type}" in
           ssh )            show_ssh_usage;;
           scp )            show_scp_usage;;
@@ -177,14 +179,14 @@ function parse_args() {
         ssh_args="${ssh_args} -F ${2}"
         shift 2
         ;;
-      -p )
+      -p | -passlist | --passlist )
         if [[ ! -f "${2}" ]]; then
           abort "$(myname): -p ${2} passlist file not found."
         fi
         passlist="${2}"
         shift 2
         ;;
-      -l )
+      -l | -limit | --limit )
         if [[ "${2}" = '' ]]; then
           abort "$(myname): -l Illegal parameter."
         fi
@@ -194,6 +196,7 @@ function parse_args() {
         rsync_args="${rsync_args} --bwlimit=${2}"
         shift 2
         ;;
+
       -owner )
         if [[ "${2}" = '' ]]; then
           abort "$(myname): -owner Illegal parameter."
@@ -222,6 +225,7 @@ function parse_args() {
         _suffix="${2}"
         shift 2
         ;;
+
       -* )
         if [[ "$1" =~ 'n' ]]; then
           noinput=true
@@ -229,8 +233,24 @@ function parse_args() {
         if [[ "$1" =~ 'q' ]]; then
           quiet=true
         fi
+        if [[ "$1" =~ 'v' ]]; then
+          verbose=true
+        fi
         shift
         ;;
+      -noinput | --noinput )
+        noinput=true
+        shift
+        ;;
+      -quiet | --quiet )
+        quiet=true
+        shift
+        ;;
+      -verbose | --verbose )
+        verbose=true
+        shift
+        ;;
+
       ssh | scp | cmd | command | service | fetch | copy )
         ops_type="${1}"
         shift
