@@ -85,12 +85,12 @@ set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 set cmd_status 0
 
-if { [string length $cmd] > 0 } {
-  send -- " export HISTCONTROL=ignorespace\r"
-  expect {
-    -re $prompt
-  }
+send -- " export HISTCONTROL=ignorespace:ignoredups\r"
+expect {
+  -re $prompt
+}
 
+if { [string length $cmd] > 0 } {
   # execute command
   send -- " ${cmd}\r"
   expect {
