@@ -230,8 +230,6 @@ function parse_args() {
           quiet=true
           ssh_args="${ssh_args} -q"
           rsync_args="${rsync_args} -q"
-        else
-          abort "$(myname): ${1} Unknown option."
         fi
         shift
         ;;
