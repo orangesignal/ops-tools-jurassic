@@ -14,7 +14,7 @@ function testService() {
   local _line=
   while read -r _line; do
     set -- ${_line}
-    local result=$(../ops -F ./ssh_config -n service "$@")
+    local result=$(../ops -n -F ./ssh_config service "$@")
     if [[ $?  != 0 ]]; then
       error "ERROR - $@"
     else
