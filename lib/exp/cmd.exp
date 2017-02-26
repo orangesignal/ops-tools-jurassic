@@ -86,8 +86,13 @@ set timeout -1
 set cmd_status 0
 
 if { [string length $cmd] > 0 } {
+  send -- " export HISTCONTROL=ignorespace\r"
+  expect {
+    -re $prompt
+  }
+
   # execute command
-  send -- "$cmd\r"
+  send -- " ${cmd}\r"
   expect {
     -re "\n(.*\r).*$prompt" {
       set msg [string trimright "$expect_out(1,string)" "\r"]
@@ -97,7 +102,7 @@ if { [string length $cmd] > 0 } {
   }
 
   # command status
-  send -- "echo \$?\r"
+  send -- " echo \$?\r"
   expect {
     -re "\n(\[^\r]*)\r"
   }
@@ -109,7 +114,7 @@ if { [string length $cmd] > 0 } {
 }
 
 # root exit
-send -- "exit\r"
+send -- " exit\r"
 
 ###############################################################################
 # terminate
