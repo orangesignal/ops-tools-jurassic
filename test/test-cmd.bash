@@ -36,5 +36,5 @@ setup
 ops_args='-n -F ./ssh_config'
 testCommand
 
-ops_args='-nq -F ./ssh_config'
+ops_args='-nqv -F ./ssh_config'
 testCommand

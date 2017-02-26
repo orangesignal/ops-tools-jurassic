@@ -20,6 +20,10 @@ proc defaultString { str defaultStr } {
   return $str
 }
 
+proc reEscape { str } {
+  regsub -all {\W} $str {\\&}
+}
+
 proc getPrompt { buffer prompt } {
   set _lines [split $buffer "\n"]
   foreach line $_lines {

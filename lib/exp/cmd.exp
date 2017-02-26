@@ -32,8 +32,9 @@ set env(LANG) C
 set env(SHELL) /bin/sh
 set env(HOME) /usr/local/bin
 
-set multiPrompt {[#>$] }
-set pw_prompt {[:]}
+set multiPrompt {[#>$] $}
+set password_prompt {[^\n]*[pP]assword: $}
+set su_password_prompt {[^\n]*:[ ]*$}
 
 set ssh_cmd       [exec which ssh]
 
@@ -60,7 +61,7 @@ eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
   timeout { abort "Failed to get password prompt\n" 255 }
-  -gl "*assword:" {
+  -re $password_prompt {
     send -- "$password\r"
   }
 }
@@ -69,7 +70,7 @@ expect {
   -re $multiPrompt {
     # sudo NOPASSWD
   }
-  -gl ":" {
+  -re $su_password_prompt {
     send -- "$root_password\r"
     expect {
       timeout { abort "Failed to Switch Root.\n" 5 }
@@ -81,24 +82,24 @@ expect {
 ###############################################################################
 # operation (root)
 
-set prompt [getPrompt $expect_out(buffer) $multiPrompt]
+set prompt [reEscape [getPrompt $expect_out(buffer) $multiPrompt]]
 set timeout -1
 set cmd_status 0
 
 send -- " export HISTCONTROL=ignorespace:ignoredups\r"
 expect {
-  -re $prompt
+  -re "${prompt}$"
 }
 
 if { [string length $cmd] > 0 } {
   # execute command
   send -- " ${cmd}\r"
   expect {
-    -re "\n(.*\r).*$prompt" {
+    -re "\n(.*\r).*${prompt}$" {
       set msg [string trimright "$expect_out(1,string)" "\r"]
       send_user -- "$msg\n"
     }
-    -re $prompt
+    -re "${prompt}$"
   }
 
   # command status
@@ -109,7 +110,7 @@ if { [string length $cmd] > 0 } {
   set cmd_status "$expect_out(1,string)"
 
   expect {
-    -re $prompt
+    -re "${prompt}$"
   }
 }
 

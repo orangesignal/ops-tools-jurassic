@@ -277,6 +277,12 @@ function parse_args() {
     ssh_args="${ssh_args} -q"
     rsync_args="${rsync_args} -q"
   fi
+  if ${verbose}; then
+    # testable
+    :
+#    ssh_args="${ssh_args} -v"
+#    rsync_args="${rsync_args} -v"
+  fi
 
   # check mandatory parameters
   if [[ "${ops_type}" = '' ]]; then
