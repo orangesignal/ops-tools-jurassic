@@ -74,8 +74,13 @@ expect {
 set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 
+send -- " export HISTCONTROL=ignorespace\r"
+expect {
+  -re $prompt
+}
+
 # execute command
-send -- "$cmd\r"
+send -- " $cmd\r"
 expect {
   -re "\n(.*\r).*$prompt" {
     set msg [string trimright "$expect_out(1,string)" "\r"]
@@ -85,7 +90,7 @@ expect {
 }
 
 # command status
-send -- "echo \$?\r"
+send -- " echo \$?\r"
 expect {
   -re "\n(\[^\r]*)\r"
 }
@@ -96,7 +101,7 @@ expect {
 }
 
 # root exit
-send -- "exit\r"
+send -- " exit\r"
 
 ###############################################################################
 # terminate

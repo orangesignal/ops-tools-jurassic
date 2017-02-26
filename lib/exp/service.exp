@@ -84,14 +84,19 @@ expect {
 set prompt [getPrompt $expect_out(buffer) $multiPrompt]
 set timeout -1
 
+send -- " export HISTCONTROL=ignorespace\r"
+expect {
+  -re $prompt
+}
+
 # execute service command
-send -- "service $service_name $cmd\r"
+send -- " service $service_name $cmd\r"
 expect {
   -re $prompt
 }
 
 # command status
-send -- "echo \$?\r"
+send -- " echo \$?\r"
 expect {
   -re "\n(\[^\r]*)\r"
 }
@@ -103,7 +108,7 @@ expect {
 
 # get process count
 sleep 1
-send -- "ps ax | grep $service_name | grep -v grep | grep -c ''\r"
+send -- " ps ax | grep $service_name | grep -v grep | grep -c ''\r"
 expect {
   -re "\n(\[^\r]*)\r"
 }
@@ -114,7 +119,7 @@ expect {
 }
 
 # root exit
-send -- "exit\r"
+send -- " exit\r"
 
 ###############################################################################
 # terminate
