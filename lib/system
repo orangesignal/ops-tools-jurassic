@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 TEXT_ESCAPE_START='\e['
 TEXT_ESCAPE_END='m'

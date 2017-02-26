@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -o nounset
 set -o pipefail
@@ -170,30 +170,19 @@ function _ops_rmdir() {
 }
 
 function _ops_expect() {
-  declare -r _echo="${1:?}"
-  shift
   declare -r _expfile=${1:?}
   shift
   local _msg=
   _msg=$(expect -f "${_expfile}" -- \
     "${ssh_args}" \
-    "${hostname}" \
-    "${username}" \
-    "${password}" \
-    "${root_cmd}" \
-    "${root_password}" \
+    "${hostname}" "${username}" "${password}" \
+    "${root_cmd}" "${root_password}" \
     "$@" \
   )
   declare -ri _ret=$?
-  case "${_echo}" in
-    noecho )
-      ;;
-    * )
-      if [[ "${_msg}" != '' ]]; then
-        echo "${_msg}"
-      fi
-      ;;
-  esac
+  if [[ "${_msg}" != '' ]]; then
+    echo "${_msg}"
+  fi
   return ${_ret}
 }
 
@@ -209,7 +198,7 @@ function ops_cmd() {
     fi
   fi
 
-  _ops_expect 'echo' "$(self_dir)/exp/cmd.exp" "${_remote_file}" "$@"
+  _ops_expect "$(self_dir)/exp/cmd.exp" "${_remote_file}" "$@"
   declare -ri _ret=$?
 
   if [[ "${_remote_file}" != '' ]]; then
@@ -222,7 +211,7 @@ function ops_cmd() {
 function ops_service() {
   _init_ssh_params "${1}" || return $?
   shift
-  _ops_expect 'echo' "$(self_dir)/exp/service.exp" "$@"
+  _ops_expect "$(self_dir)/exp/service.exp" "$@"
   return $?
 }
 
@@ -254,7 +243,7 @@ function ops_copy() {
       fi
       # copy work_path to dest (+ chown + chmod)
       _remote_src="${_remote_child_dir}/$(basename ${_src})"
-      _ops_expect 'echo' "$(self_dir)/exp/copy.exp" "${_remote_file}" ${_remote_src} "$@"
+      _ops_expect "$(self_dir)/exp/copy.exp" "${_remote_file}" ${_remote_src} "$@"
       _ret=$?
       if [[ ${_ret} != 0 ]]; then
         break
@@ -280,7 +269,7 @@ function ops_fetch() {
   declare -i _ret=0
 
   _ops_mkdir "${_remote_dir}" || return $?
-  _ops_expect 'noecho' "$(self_dir)/exp/fetch.exp" "${_src}" "${_remote_dir}"
+  _ops_expect "$(self_dir)/exp/fetch.exp" "${_src}" "${_remote_dir}"
   _ret=$?
   if [[ ${_ret} == 0 ]]; then
     _ops_rsync "${username}"@"${hostname}":"${_remote_src}" "${_dest}"

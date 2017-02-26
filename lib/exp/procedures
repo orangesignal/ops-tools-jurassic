@@ -1,4 +1,4 @@
-#!/bin/env tclsh
+#!/usr/bin/expect -f
 
 proc error { msg } {
   send_error -- "$msg"
