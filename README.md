@@ -124,7 +124,10 @@ w02	devops2	234567	su -
 
 ```
 # root のホームディレクトリのファイル一覧を取得する例
-./ops cmd hostname ls -la
+./ops cmd hostname "ls -la"
+# - で始まる文字を ops のオプションとして解釈させたくない場合は、-- を使用することで、それ以降のパラメーターの解析を無効化できます。
+./ops cmd hostname -- ls -la
+
 # Jenkins を停止させる例
 ./ops cmd hostname service jenkins stop
 ```
