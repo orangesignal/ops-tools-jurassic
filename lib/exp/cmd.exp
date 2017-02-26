@@ -82,24 +82,24 @@ expect {
 ###############################################################################
 # operation (root)
 
-set prompt [reEscape [getPrompt $expect_out(buffer) $multiPrompt]]
+set prompt "[reEscape [getPrompt $expect_out(buffer) $multiPrompt]]$"
 set timeout -1
 set cmd_status 0
 
 send -- " export HISTCONTROL=ignorespace:ignoredups\r"
 expect {
-  -re "${prompt}$"
+  -re $prompt
 }
 
 if { [string length $cmd] > 0 } {
   # execute command
   send -- " ${cmd}\r"
   expect {
-    -re "\n(.*\r).*${prompt}$" {
+    -re "\n(.*\r).*$prompt" {
       set msg [string trimright "$expect_out(1,string)" "\r"]
       send_user -- "$msg\n"
     }
-    -re "${prompt}$"
+    -re $prompt
   }
 
   # command status
@@ -110,7 +110,7 @@ if { [string length $cmd] > 0 } {
   set cmd_status "$expect_out(1,string)"
 
   expect {
-    -re "${prompt}$"
+    -re $prompt
   }
 }
 

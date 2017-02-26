@@ -81,7 +81,7 @@ expect {
 ###############################################################################
 # operation (root)
 
-set prompt [getPrompt $expect_out(buffer) $multiPrompt]
+set prompt "[reEscape [getPrompt $expect_out(buffer) $multiPrompt]]$"
 set timeout -1
 
 send -- " export HISTCONTROL=ignorespace\r"
