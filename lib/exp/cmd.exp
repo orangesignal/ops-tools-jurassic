@@ -57,6 +57,10 @@ set multiPrompt {[^\n]*[#>$] $}
 set password_prompt {[^\n]*[pP]assword: $}
 set su_password_prompt {[^\n]*:[ ]*$}
 
+if { $cmd eq "" } {
+  log_user 1
+}
+
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
   timeout { abort "Failed to get password prompt\n" 255 }
@@ -86,6 +90,12 @@ expect {
 # operation (root)
 
 set timeout -1
+
+if { $cmd eq "" } {
+  interact
+  exit 0
+}
+
 set prompt "[reEscape $expect_out(0,string)]$"
 
 send -- " export HISTCONTROL=ignorespace:ignoredups\r"
@@ -93,29 +103,25 @@ expect {
   -re $prompt
 }
 
-set cmd_status 0
-
-if { [string length $cmd] > 0 } {
-  # execute command
-  send -- " ${cmd}\r"
-  expect {
-    -re "\n(.*\r).*$prompt" {
-      set msg [string trimright "$expect_out(1,string)" "\r"]
-      send_user -- "$msg\n"
-    }
-    -re $prompt
+# execute command
+send -- " ${cmd}\r"
+expect {
+  -re "\n(.*\r).*$prompt" {
+    set msg [string trimright "$expect_out(1,string)" "\r"]
+    send_user -- "$msg\n"
   }
+  -re $prompt
+}
 
-  # command status
-  send -- " echo \$?\r"
-  expect {
-    -re "\n(\[^\r]*)\r"
-  }
-  set cmd_status "$expect_out(1,string)"
+# command status
+send -- " echo \$?\r"
+expect {
+  -re "\n(\[^\r]*)\r"
+}
+set cmd_status "$expect_out(1,string)"
 
-  expect {
-    -re $prompt
-  }
+expect {
+  -re $prompt
 }
 
 # root exit
