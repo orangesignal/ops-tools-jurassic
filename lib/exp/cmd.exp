@@ -34,22 +34,22 @@ set ssh_args      [lindex $argv 0]
 set hostname      [lindex $argv 1]
 set username      [lindex $argv 2]
 set password      [lindex $argv 3]
-set root_cmd      [lindex $argv 4]
-set root_password [lindex $argv 5]
+set root_cmd      [defaultString [lindex $argv 4] {sudo su -}]
+set root_password [defaultString [lindex $argv 5] $password]
 set cmd           [createCommand $argv 6]
 
 # validation
-assertNotEmpty $hostname "hostname must not be null\n"
-assertNotEmpty $username "username must not be null\n"
-assertNotEmpty $root_cmd "root_cmd must not be null\n"
+assertNotEmpty $hostname {hostname must not be null\n}
+assertNotEmpty $username {username must not be null\n}
+assertNotEmpty $root_cmd {root_cmd must not be null\n}
 
 ###############################################################################
 # spawn - ssh login + switch to root
 
 if { ![info exists env(TERM)] } { set env(TERM) vt100 }
-if { ![info exists env(LANG)] } { set env(LANG) C }
 if { ![info exists env(SHELL)] } { set env(SHELL) /bin/bash }
 if { ![info exists env(HOME)] } { set env(HOME) /usr/local/bin }
+if { ![info exists env(LANG)] } { set env(LANG) C }
 
 set timeout 10
 eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
