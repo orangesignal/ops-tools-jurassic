@@ -98,7 +98,7 @@ if { $cmd eq "" } {
 
 set prompt "[reEscape $expect_out(0,string)]$"
 
-send -- " export HISTCONTROL=ignorespace:ignoredups\r"
+send -- " export HISTCONTROL=ignorespace\r"
 expect {
   -re $prompt
 }
