@@ -65,7 +65,7 @@ expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
   timeout { abort "Failed to get password prompt\n" 255 }
   -glob "(yes/no)?" {
-    send "yes\n"
+    send -- "yes\r"
     exp_continue
   }
   -re $password_prompt {
