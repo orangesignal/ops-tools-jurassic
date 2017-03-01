@@ -27,15 +27,6 @@ proc createCommand { argv start } {
 ###############################################################################
 # variables
 
-set env(TERM) vt100
-set env(LANG) C
-set env(SHELL) /bin/sh
-set env(HOME) /usr/local/bin
-
-set multiPrompt {[^\n]*[#>$] $}
-set password_prompt {[^\n]*[pP]assword: $}
-set su_password_prompt {[^\n]*:[ ]*$}
-
 set ssh_cmd       [exec which ssh]
 
 # parse args
@@ -58,12 +49,21 @@ assertNotEmpty $root_cmd "root_cmd must not be null\n"
 set timeout 10
 eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
 
+if { ![info exists env(TERM)] } { set env(TERM) vt100 }
+if { ![info exists env(LANG)] } { set env(LANG) C }
+if { ![info exists env(SHELL)] } { set env(SHELL) /bin/bash }
+if { ![info exists env(HOME)] } { set env(SHELL) /usr/local/bin }
+
+set multiPrompt {[^\n]*[#>$] $}
+set password_prompt {[^\n]*[pP]assword: $}
+set su_password_prompt {[^\n]*:[ ]*$}
+
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
   timeout { abort "Failed to get password prompt\n" 255 }
   -glob "(yes/no)?" {
     send "yes\n"
-      exp_continue
+    exp_continue
   }
   -re $password_prompt {
     send -- "$password\r"
