@@ -2,7 +2,7 @@
 log_user 0
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' \'remote_file\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' \'root_cmd\' \'root_password\' \'remote_file\' \[command...\]"
   exit 0
 }
 
