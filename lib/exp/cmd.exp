@@ -41,7 +41,6 @@ set cmd           [createCommand $argv 6]
 # validation
 assertNotEmpty $hostname {hostname must not be null\n}
 assertNotEmpty $username {username must not be null\n}
-assertNotEmpty $root_cmd {root_cmd must not be null\n}
 
 ###############################################################################
 # spawn - ssh login + switch to root
