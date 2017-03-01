@@ -61,6 +61,10 @@ eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
   timeout { abort "Failed to get password prompt\n" 255 }
+  -glob "(yes/no)?" {
+    send "yes\n"
+      exp_continue
+  }
   -re $password_prompt {
     send -- "$password\r"
   }
@@ -82,14 +86,15 @@ expect {
 ###############################################################################
 # operation (root)
 
-set prompt "[reEscape [getPrompt $expect_out(buffer) $multiPrompt]]$"
 set timeout -1
-set cmd_status 0
+set prompt "[reEscape $expect_out(0,string)]$"
 
 send -- " export HISTCONTROL=ignorespace:ignoredups\r"
 expect {
   -re $prompt
 }
+
+set cmd_status 0
 
 if { [string length $cmd] > 0 } {
   # execute command
