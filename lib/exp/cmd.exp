@@ -46,19 +46,19 @@ assertNotEmpty $username {username must not be null\n}
 # spawn - ssh login + switch to root
 
 if { ![info exists env(TERM)] } { set env(TERM) vt100 }
-if { ![info exists env(SHELL)] } { set env(SHELL) /bin/bash }
+if { ![info exists env(SHELL)] } { set env(SHELL) /bin/sh }
 if { ![info exists env(HOME)] } { set env(HOME) /usr/local/bin }
 if { ![info exists env(LANG)] } { set env(LANG) C }
 
 set timeout 10
-eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
+eval spawn -noecho $ssh_cmd -t $ssh_args $username@$hostname $root_cmd
 
 set multiPrompt {[^\n]*[#>$] $}
 set password_prompt {[^\n]*[pP]assword: $}
 set su_password_prompt {[^\n]*:[ ]*$}
 
-if { $cmd eq "" } {
-  log_user 1
+if { $cmd ne "" } {
+  log_user 0
 }
 
 expect {

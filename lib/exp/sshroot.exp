@@ -1,8 +1,7 @@
 #!/usr/bin/expect -f
-# redesigning cmd.exp
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'ssh_cmd\' \'password\' \'root_cmd\' \'root_password\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'ssh_cmd\' \'password\' \'root_cmd\' \'root_password\' \'remote_file\' \[command...\]"
   exit 0
 }
 
@@ -13,9 +12,13 @@ source "$self_dir/procedures"
 # procedure
 
 proc createCommand { argv start } {
-  set _command  [lindex $argv $start]
-  for { set _index [expr $start + 1] } { $_index < [llength $argv] } { incr _index } {
+  set _remote_file  [lindex $argv $start]
+  set _command      [lindex $argv [expr $start + 1]]
+  for { set _index [expr $start + 2] } { $_index < [llength $argv] } { incr _index } {
     append _command " [defaultString [lindex $argv $_index] '']"
+  }
+  if { $_remote_file ne ""  } {
+    return "cat $_remote_file | $_command"
   }
   return "$_command"
 }
@@ -23,28 +26,25 @@ proc createCommand { argv start } {
 ###############################################################################
 # variables
 
-#while { ![eof stdin] } {
-#  gets stdin line
-#  puts "$line"
-#}
-
 # parse args
-set ssh_cmd       [lindex $argv 0]
-set password      [lindex $argv 1]
-set root_cmd      [defaultString [lindex $argv 2] {sudo su -}]
-set root_password [defaultString [lindex $argv 3] $password]
-set cmd           [createCommand $argv 4]
+set ssh_cmd       [defaultString [lindex $argv 0] [exec which ssh]]
+set ssh_args      [lindex $argv 1]
+set password      [lindex $argv 2]
+set root_cmd      [defaultString [lindex $argv 3] {sudo su -}]
+set root_password [defaultString [lindex $argv 4] $password]
+set cmd           [createCommand $argv 5]
 
 ###############################################################################
 # spawn - ssh login + switch to root
 
+# BUGS - http://www.tcl.tk/man/expect5.31/expect.1.html
 if { ![info exists env(TERM)] } { set env(TERM) vt100 }
 if { ![info exists env(SHELL)] } { set env(SHELL) /bin/sh }
 if { ![info exists env(HOME)] } { set env(HOME) /usr/local/bin }
 if { ![info exists env(LANG)] } { set env(LANG) C }
 
 set timeout 10
-eval spawn -noecho $ssh_cmd -t $root_cmd
+eval spawn -noecho $ssh_cmd -t $ssh_args $root_cmd
 
 set multiPrompt {[^\n]*[#>$] $}
 set password_prompt {[^\n]*[pP]assword: $}
