@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'ssh_cmd\' \'password\' \'root_cmd\' \'root_password\' \'remote_file\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'ssh_cmd\' \'ssh_args\' \'password\' \'root_cmd\' \'root_password\' \'remote_file\' \[command...\]"
   exit 0
 }
 
@@ -55,8 +55,8 @@ if { $cmd ne "" } {
 }
 
 expect {
-  eof     { abort "SSH failure for remote host\n" 255 }
-  timeout { abort "Failed to get password prompt\n" 255 }
+  eof     { abort "${argv0}: SSH failure for remote host\n" 255 }
+  timeout { abort "${argv0}: Failed to get password prompt\n" 255 }
   -glob "(yes/no)?" {
     send -- "yes\r"
     exp_continue
@@ -66,14 +66,14 @@ expect {
   }
 }
 expect {
-  timeout { abort "Login failed. Password incorrect.\n" 5 }
+  timeout { abort "${argv0}: Login failed. Password incorrect.\n" 5 }
   -re $multiPrompt {
     # sudo NOPASSWD
   }
   -re $su_password_prompt {
     send -- "$root_password\r"
     expect {
-      timeout { abort "Failed to Switch Root.\n" 5 }
+      timeout { abort "${$argv0}: Failed to Switch Root.\n" 5 }
       -re $multiPrompt
     }
   }
@@ -127,7 +127,7 @@ expect eof
 catch wait result
 set os_error [lindex $result 2]
 if { $os_error == -1 } {
-  send_error -- "Fail to exec\n"
+  send_error -- "${argv0}: Fail to exec\n"
   exit 127
 }
 set status [lindex $result 3]
