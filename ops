@@ -34,7 +34,7 @@ END
 
 function show_usage() {
 cat <<-END
-Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] ssh|scp|cmd|command|service|fetch|copy hostname args...
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] ssh|scp|cmd|fetch|copy hostname args...
 指定された ops アクションを実行します。
 $(show_common_params)
 
@@ -75,24 +75,12 @@ END
 
 function show_cmd_usage() {
 cat <<-END
-Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] cmd|command hostname [command...]
+Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] [-l limit] cmd hostname [command...]
 Executes a (root) command on a remote node
 $(show_common_params)
 
 Examples:
   $(myname) cmd web01 'uname -n && env'
-
-END
-}
-
-function show_service_usage() {
-cat <<-END
-Usage: $(myname) [-nq] [-F ssh_config] [-p passlist] service hostname service_name [command]
-指定されたホストへ SSH 接続 + root 化して指定されたサービスへコマンドを実行します。
-$(show_common_params)
-
-Examples:
-  $(myname) service w01 jenkins restart
 
 END
 }
@@ -152,6 +140,7 @@ function parse_args() {
   local _mode=
   local _backup=
   local _suffix=
+  local _match=false
 
   while [[ $# > 0 ]]; do
     case "${1}" in
@@ -167,13 +156,12 @@ function parse_args() {
 
       -h | -help | --help )
         case "${ops_type}" in
-          ssh )            show_ssh_usage;;
-          scp )            show_scp_usage;;
-          cmd | command )  show_cmd_usage;;
-          service )        show_service_usage;;
-          fetch )          show_fetch_usage;;
-          copy )           show_copy_usage;;
-          * )              show_usage;;
+          ssh )   show_ssh_usage;;
+          scp )   show_scp_usage;;
+          cmd )   show_cmd_usage;;
+          fetch ) show_fetch_usage;;
+          copy )  show_copy_usage;;
+          * )     show_usage;;
         esac
         exit 0
         ;;
@@ -232,18 +220,6 @@ function parse_args() {
         shift 2
         ;;
 
-      -* )
-        if [[ "$1" =~ 'n' ]]; then
-          noinput=true
-        fi
-        if [[ "$1" =~ 'q' ]]; then
-          quiet=true
-        fi
-        if [[ "$1" =~ 'v' ]]; then
-          verbose=true
-        fi
-        shift
-        ;;
       -noinput | --noinput )
         noinput=true
         shift
@@ -256,9 +232,32 @@ function parse_args() {
         verbose=true
         shift
         ;;
+      -* )
+        _match=false
+        if [[ "$1" =~ 'n' ]]; then
+          noinput=true
+          _match=true
+        fi
+        if [[ "$1" =~ 'q' ]]; then
+          quiet=true
+          _match=true
+        fi
+        if [[ "$1" =~ 'v' ]]; then
+          verbose=true
+          _match=true
+        fi
+        if ! ${_match}; then
+          _ops_args+=("${1}")
+        fi
+        shift
+        ;;
 
-      ssh | scp | cmd | command | service | fetch | copy )
-        ops_type="${1}"
+      ssh | scp | cmd | fetch | copy )
+        if [[ "${ops_type}" = '' ]]; then
+          ops_type="${1}"
+        else
+          _ops_args+=("${1}")
+        fi
         shift
         ;;
       *)
@@ -355,11 +354,8 @@ case "${ops_type}" in
   scp )
     ops_scp "${ops_args[@]}" || exit $?
     ;;
-  cmd | command )
+  cmd )
     ops_cmd "${ops_args[@]}" || exit $?
-    ;;
-  service )
-    ops_service "${ops_args[@]}" || exit $?
     ;;
   fetch )
     ops_fetch "${ops_args[@]}" || exit $?

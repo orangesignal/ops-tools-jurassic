@@ -132,16 +132,6 @@ w02	devops2	234567	su -
 ./ops cmd hostname service jenkins stop
 ```
 
-### service (service の落とし上げ) ... 非推奨 (将来的に削除)
-
-`cmd` でもサービスの落とし上げは可能です。   
-`service` では、サービスの落とし上げ後にサービス名に一致するプロセス数を返します。
-
-```
-./ops service hostname jenkins stop
-0
-```
-
 ### ssh (一般ユーザでのコマンド実行)
 
 root 化する必要ない操作は通常の ssh や scp で十分ですが、
@@ -163,7 +153,7 @@ ops を使用すると(良いか悪いかは別として)パスワードを覚�
 コマンド全般の使い方はヘルプオプションで確認して下さい。
 ```
 ./ops -h
-./ops [ssh|cmd|service|fetch|copy] -h
+./ops [ssh|cmd|fetch|copy] -h
 ```
 
 ## 使い方2
