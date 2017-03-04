@@ -104,11 +104,11 @@ function ops_ssh() {
   _init_ssh_params "${1}" || return $?
   shift
 
-  if ! $noinput; then
-    if [[ -s /dev/stdin ]]; then
-      _ops_ssh_stdin "$@"
-      return $?
-    fi
+  if $noinput; then
+    exec 0</dev/null
+  elif [[ -s /dev/stdin ]]; then
+    _ops_ssh_stdin "$@"
+    return $?
   fi
   _ops_ssh "$@"
   return $?
@@ -194,11 +194,11 @@ function ops_cmd() {
   shift
 
   local _remote_file=
-  if ! $noinput; then
-    if [[ -s /dev/stdin ]]; then
-      _remote_file="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
-      _ops_ssh_stdin "cat >${_remote_file}" || return $?
-    fi
+  if $noinput; then
+    exec 0</dev/null
+  elif [[ -s /dev/stdin ]]; then
+    _remote_file="$(_ops_remote_home_dir)/$(_generate_ops_work_name)"
+    _ops_ssh_stdin "cat >${_remote_file}" || return $?
   fi
 
   _ops_expect "$(self_dir)/exp/cmd.exp" "${_remote_file}" "$@"
