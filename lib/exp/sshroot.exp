@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'ssh_cmd\' \'ssh_args\' \'password\' \'root_cmd\' \'root_password\' \'remote_file\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'password\' \'root_password\' \'ssh_cmd\' \'ssh_args\' \'root_cmd\' \'remote_file\' \[command...\]"
   exit 0
 }
 
@@ -27,11 +27,11 @@ proc createCommand { argv start } {
 # variables
 
 # parse args
-set ssh_cmd       [defaultString [lindex $argv 0] [exec which ssh]]
-set ssh_args      [lindex $argv 1]
-set password      [lindex $argv 2]
-set root_cmd      [defaultString [lindex $argv 3] {sudo su -}]
-set root_password [defaultString [lindex $argv 4] $password]
+set password      [lindex $argv 0]
+set root_password [defaultString [lindex $argv 1] $password]
+set ssh_cmd       [defaultString [lindex $argv 2] [exec which ssh]]
+set ssh_args      [lindex $argv 3]
+set root_cmd      [defaultString [lindex $argv 4] {sudo su -}]
 set cmd           [createCommand $argv 5]
 
 ###############################################################################
