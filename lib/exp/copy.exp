@@ -1,5 +1,4 @@
 #!/usr/bin/expect -f
-log_user 0
 
 if { [llength $argv] == 0 } {
   puts "Usage: expect -f $argv0 -- \'ssh_args\' hostname username \'password\' root_cmd \'root_password\' remote_file src dest \[\'owner\' \'mode\' \'backup\' \'suffix\'\]"
@@ -37,14 +36,6 @@ proc createCommand { argv start } {
 ###############################################################################
 # variables
 
-set env(TERM) vt100
-set env(LANG) C
-set env(SHELL) /bin/sh
-set env(HOME) /usr/local/bin
-
-set multiPrompt {[#>$] }
-set pw_prompt {[:]}
-
 set ssh_cmd       [exec which ssh]
 
 # parse args
@@ -64,13 +55,29 @@ assertNotEmpty $root_cmd "root_cmd must not be null\n"
 ###############################################################################
 # spawn - ssh login + switch to root
 
+# BUGS - http://www.tcl.tk/man/expect5.31/expect.1.html
+if { ![info exists env(TERM)] } { set env(TERM) vt100 }
+if { ![info exists env(SHELL)] } { set env(SHELL) /bin/sh }
+if { ![info exists env(HOME)] } { set env(HOME) /usr/local/bin }
+if { ![info exists env(LANG)] } { set env(LANG) C }
+
 set timeout 10
 eval spawn -noecho $ssh_cmd $ssh_args -t $username@$hostname $root_cmd
+
+set multiPrompt {[^\n]*[#>$] $}
+set password_prompt {[^\n]*[pP]assword: $}
+set su_password_prompt {[^\n]*:[ ]*$}
+
+log_user 0
 
 expect {
   eof     { abort "SSH failure for remote host $hostname\n" 255 }
   timeout { abort "Failed to get password prompt\n" 255 }
-  *assword: {
+  -glob "(yes/no)?" {
+    send -- "yes\r"
+    exp_continue
+  }
+  -re $password_prompt {
     send -- "$password\r"
   }
 }
@@ -79,7 +86,7 @@ expect {
   -re $multiPrompt {
     # sudo NOPASSWD
   }
-  : {
+  -re $su_password_prompt {
     send -- "$root_password\r"
     expect {
       timeout { abort "Failed to Switch Root.\n" 5 }
@@ -91,8 +98,8 @@ expect {
 ###############################################################################
 # operation (root)
 
-set prompt "[reEscape [getPrompt $expect_out(buffer) $multiPrompt]]$"
 set timeout -1
+set prompt "[reEscape $expect_out(0,string)]$"
 
 send -- " export HISTCONTROL=ignorespace\r"
 expect {
@@ -104,7 +111,7 @@ send -- " $cmd\r"
 expect {
   -re "\n(.*\r).*$prompt" {
     set msg [string trimright "$expect_out(1,string)" "\r"]
-    send_user "$msg\n"
+    send_user -- "$msg\n"
   }
   -re $prompt
 }

@@ -45,6 +45,7 @@ assertNotEmpty $username {username must not be null\n}
 ###############################################################################
 # spawn - ssh login + switch to root
 
+# BUGS - http://www.tcl.tk/man/expect5.31/expect.1.html
 if { ![info exists env(TERM)] } { set env(TERM) vt100 }
 if { ![info exists env(SHELL)] } { set env(SHELL) /bin/sh }
 if { ![info exists env(HOME)] } { set env(HOME) /usr/local/bin }
