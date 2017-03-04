@@ -42,7 +42,6 @@ eval spawn -noecho $ssh_cmd -t $ssh_args $cmd
 
 set multiPrompt {[^\n]*[#>$] $}
 set password_prompt {[^\n]*[pP]assword: $}
-set su_password_prompt {[^\n]*:[ ]*$}
 
 if { $cmd ne "" } {
   log_user 0

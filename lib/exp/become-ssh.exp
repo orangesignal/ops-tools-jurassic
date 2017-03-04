@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 if { [llength $argv] == 0 } {
-  puts "Usage: expect -f $argv0 -- \'password\' \'root_password\' \'ssh_cmd\' \'ssh_args\' \'root_cmd\' \'remote_file\' \[command...\]"
+  puts "Usage: expect -f $argv0 -- \'password\' \'become_password\' \'become_cmd\' \'ssh_cmd\' \'ssh_args\' \'remote_file\' \[command...\]"
   exit 0
 }
 
@@ -27,12 +27,12 @@ proc createCommand { argv start } {
 # variables
 
 # parse args
-set password      [lindex $argv 0]
-set root_password [defaultString [lindex $argv 1] $password]
-set ssh_cmd       [defaultString [lindex $argv 2] [exec which ssh]]
-set ssh_args      [lindex $argv 3]
-set root_cmd      [defaultString [lindex $argv 4] {sudo su -}]
-set cmd           [createCommand $argv 5]
+set password        [lindex $argv 0]
+set become_password [defaultString [lindex $argv 1] $password]
+set become_cmd      [defaultString [lindex $argv 2] {sudo su -}]
+set ssh_cmd         [defaultString [lindex $argv 3] [exec which ssh]]
+set ssh_args        [lindex $argv 4]
+set cmd             [createCommand $argv 5]
 
 ###############################################################################
 # spawn - ssh login + switch to root
@@ -44,11 +44,11 @@ if { ![info exists env(HOME)] } { set env(HOME) /usr/local/bin }
 if { ![info exists env(LANG)] } { set env(LANG) C }
 
 set timeout 10
-eval spawn -noecho $ssh_cmd -t $ssh_args $root_cmd
+eval spawn -noecho $ssh_cmd -t $ssh_args $become_cmd
 
 set multiPrompt {[^\n]*[#>$] $}
 set password_prompt {[^\n]*[pP]assword: $}
-set su_password_prompt {[^\n]*:[ ]*$}
+set become_password_prompt {[^\n]*:[ ]*$}
 
 if { $cmd ne "" } {
   log_user 0
@@ -70,8 +70,8 @@ expect {
   -re $multiPrompt {
     # sudo NOPASSWD
   }
-  -re $su_password_prompt {
-    send -- "$root_password\r"
+  -re $become_password_prompt {
+    send -- "$become_password\r"
     expect {
       timeout { abort "${$argv0}: Failed to Switch Root.\n" 5 }
       -re $multiPrompt
